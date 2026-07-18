@@ -550,11 +550,20 @@ window.openQ = (slotId, di) => {
   setTimeout(()=>{ const el=$('q-input'); if(el){ el.focus(); el.select(); } }, 0);
 };
 function qMatches(txt){
-  const last = txt.split(',').pop().trim().toLowerCase();
+  const last = txt.split(',').pop().trim();
+  // QLV: đang gõ phần sau @ -> gợi ý cửa hàng thuộc khu vực
+  if (state.scope==='region' && last.indexOf('@') >= 0){
+    const sp = last.split('@').slice(1).join('@').trim().toLowerCase();
+    const rg = activeEntity();
+    let stores = Object.keys(state.stores).filter(c => state.stores[c].region===rg);
+    if (!stores.length) stores = Object.keys(state.stores);
+    const opts = ['VP (văn phòng)'].concat(stores);
+    return (sp ? opts.filter(o=>o.toLowerCase().indexOf(sp)>=0) : opts).slice(0, 8);
+  }
+  const lastL = last.toLowerCase();
   const names = qNamePool();
-  if (!last) return names.slice(0, 8);
-  const norm = (x)=>x.toLowerCase();
-  return names.filter(n => norm(n).includes(last)).slice(0, 8);
+  if (!lastL) return names.slice(0, 8);
+  return names.filter(n => n.toLowerCase().includes(lastL)).slice(0, 8);
 }
 function qNamePool(){
   const slot = curSlots().find(s=>s.id===(state.qOpen||{}).slotId);
@@ -574,6 +583,24 @@ window.qPick = (e, n) => {
   e.preventDefault();
   const el = $('q-input');
   const parts = el.value.split(',');
+  const last = parts[parts.length-1];
+  // Chọn cửa hàng (đang gõ sau @)
+  if (state.scope==='region' && last.indexOf('@') >= 0){
+    const namePart = last.split('@')[0].trim();
+    const store = n.indexOf('VP')===0 ? 'VP' : n;   // "VP (văn phòng)" -> VP
+    parts[parts.length-1] = ' ' + namePart + ' @ ' + store;
+    el.value = parts.join(',').replace(/^\s+/,'') + ', ';
+    state.qSug = -1; renderSugg(); el.focus();
+    return;
+  }
+  // Chọn tên
+  if (state.scope==='region'){
+    // QLV: tự thêm " @ " để nhắc nhập cửa hàng
+    parts[parts.length-1] = ' ' + n + ' @ ';
+    el.value = parts.join(',').replace(/^\s+/,'');
+    state.qSug = -1; renderSugg(); el.focus();
+    return;
+  }
   parts[parts.length-1] = ' ' + n;
   el.value = parts.join(',').replace(/^\s+/,'') + ', ';
   state.qSug = -1; renderSugg(); el.focus();
@@ -597,23 +624,52 @@ window.qCommit = (moveNext, dir) => {
   const {slotId, di} = state.qOpen;
   const pool = qNamePool();
   const raw = el.value.split(',').map(x=>x.trim()).filter(Boolean);
-  const names = [], bad = [];
-  raw.forEach(t => {
-    const hit = pool.find(n => n.toLowerCase() === t.toLowerCase())
-             || pool.find(n => n.toLowerCase().startsWith(t.toLowerCase()));
-    if (hit){ if (!names.includes(hit)) names.push(hit); } else bad.push(t);
+  const isRegion = state.scope==='region';
+  const namemap = {}; rosterOf(activeEntity()).forEach(r=>namemap[r.name.toLowerCase()]=r.name);
+  const items = [], bad = [];
+  const seen = {};
+  raw.forEach(tok => {
+    // QLV: cho phép cú pháp "Tên @ Cửa hàng". Cửa hàng thường: chỉ tên.
+    let namePart = tok, storePart = '';
+    if (isRegion && tok.indexOf('@') >= 0){
+      const sp = tok.split('@');
+      namePart = sp[0].trim();
+      storePart = sp.slice(1).join('@').trim();
+    }
+    const key = namePart.toLowerCase();
+    const hit = namemap[key]
+             || Object.keys(namemap).filter(k=>k.startsWith(key)).map(k=>namemap[k])[0]
+             || (state.scope==='store' && key===MGR.toLowerCase() ? MGR : null);
+    if (!hit){ bad.push(namePart); return; }
+    if (seen[hit]) return; seen[hit] = 1;
+    let h = '';
+    if (isRegion){
+      if (storePart){
+        const sp = storePart.toLowerCase();
+        if (sp==='vp' || sp==='văn phòng' || sp==='vanphong') h = '__VP__';
+        else {
+          const code = Object.keys(state.stores).find(c => c.toLowerCase()===sp)
+                    || Object.keys(state.stores).find(c => c.toLowerCase().indexOf(sp)>=0);
+          if (code) h = code; else { bad.push('cửa hàng "'+storePart+'"'); return; }
+        }
+      } else {
+        const old = cellItems(slotId, di).find(it=>it.n===hit);
+        h = old ? old.h : '';
+      }
+    }
+    items.push({n:hit, h});
   });
   if (bad.length){
-    state.saveMsg = 'err:Không có nhân sự tên "'+bad.join(', ')+'" — thêm ở tab Nhân sự trước';
+    state.saveMsg = 'err:Không nhận ra: '+bad.join(', ')+(isRegion?' — gõ dạng "Tên @ MãCửaHàng" (VD: Khôi @ JMHCM05, hoặc Khôi @ VP)':' — kiểm tra tab Nhân sự');
     el.classList.add('bad'); render(); return;
   }
   const curNames = cellNames(slotId, di);
-  const changed = curNames.length!==names.length || curNames.some((x,i)=>x!==names[i]);
-  // giữ store_hint cũ nếu tên trùng (QLV), tên mới thì h rỗng
-  const prev = cellItems(slotId, di);
-  const items = names.map(n => { const old = prev.find(it=>it.n===n); return {n, h: old?old.h:''}; });
+  const names = items.map(it=>it.n);
+  const changed = curNames.length!==names.length || curNames.some((x,i)=>x!==names[i])
+               || (isRegion && items.some(it=>{ const old=cellItems(slotId,di).find(o=>o.n===it.n); return !old || old.h!==it.h; }));
   state.qOpen = null;
-  if (moveNext){
+  const needStore = isRegion ? items.find(it=>!it.h) : null;
+  if (moveNext && !needStore){
     const slots = curSlots();
     const si = slots.findIndex(s=>s.id===slotId);
     const step = dir || 1;
@@ -622,11 +678,8 @@ window.qCommit = (moveNext, dir) => {
     if (slots[nsi]) state.qOpen = {slotId: slots[nsi].id, di: ndi};
   }
   if (changed) writeCell(slotId, di, items); else render();
-  // QLV: nếu có người vừa thêm mà chưa gán cửa hàng -> hỏi ngay
-  if (state.scope==='region'){
-    const need = items.find(it => !it.h);
-    if (need){ state.qOpen = null; setTimeout(()=>openRegionCell(slotId, di, need.n), 60); return; }
-  }
+  // QLV: người chưa gán cửa hàng (không dùng cú pháp @) -> mở popup bổ sung
+  if (needStore){ state.qOpen = null; setTimeout(()=>openRegionCell(slotId, di, needStore.n), 60); return; }
   if (state.qOpen) setTimeout(()=>{ const n=$('q-input'); if(n){ n.focus(); n.select(); } }, 0);
 };
 /* --- Điền cả hàng (1 ca × 7 ngày) --- */
@@ -924,7 +977,7 @@ function viewGrid(sw, a, slots, canEdit, locked){
       /* Chế độ gõ nhanh: ô đang mở thành ô nhập */
       if (canEdit && mode==='type' && isQ){
         rows += `<td><div class="qwrap">
-          <textarea id="q-input" class="qinput" rows="2" placeholder="Gõ tên, cách nhau dấu phẩy"
+          <textarea id="q-input" class="qinput" rows="2" placeholder="${state.scope==='region'?'Tên @ Cửa hàng — VD: Khôi @ JMHCM05':'Gõ tên, cách nhau dấu phẩy'}"
             oninput="qInputChanged()" onkeydown="qKey(event)" onblur="setTimeout(()=>{if(state.qOpen)qCommit(false)},150)">${esc(names.join(', '))}</textarea>
           <div class="sugg" id="q-sugg"></div>
         </div></td>`;
@@ -977,7 +1030,7 @@ function viewGrid(sw, a, slots, canEdit, locked){
     </div>
     <div class="hintbar">
       ${mode==='paint'?'Chọn 1 tên → nhấn các ô · kéo thẻ thả vào ô cũng được':''}
-      ${mode==='type'?'<span>Nhấn ô → gõ tên, cách nhau dấu phẩy · <kbd>Tab</kbd> sang ngày kế · <kbd>Enter</kbd> lưu</span>':''}
+      ${mode==='type'?'<span>Nhấn ô → gõ tên'+(state.scope==='region'?' <b>@ mã cửa hàng</b> (VD: Khôi @ JMHCM05, hoặc Khôi @ VP)':', cách nhau dấu phẩy')+' · <kbd>Tab</kbd> sang ngày kế · <kbd>Enter</kbd> lưu</span>':''}
       ${mode==='click'?'Nhấn ô để mở danh sách tick chọn (cách cũ)':''}
     </div>
     <div class="hintbar" style="margin-left:auto">
