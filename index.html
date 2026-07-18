@@ -459,7 +459,15 @@ window.closeCell = () => { state.editCell=null; render(); };
 window.saveCell = () => {
   const names = Array.from(document.querySelectorAll('.opt input:checked')).map(x=>x.value);
   const {slotId,di} = state.editCell; state.editCell=null;
-  mutate('setCell', {week:state.week, entity:activeEntity(), slotId, di, names});
+  // Giữ store_hint cũ nếu tên trùng (QLV)
+  const prev = cellItems(slotId, di);
+  const items = names.map(n => { const old = prev.find(it=>it.n===n); return {n, h: old?old.h:''}; });
+  writeCell(slotId, di, items);
+  // QLV: người mới chưa gán cửa hàng -> hỏi ngay
+  if (state.scope==='region'){
+    const need = items.find(it => !it.h);
+    if (need) setTimeout(()=>openRegionCell(slotId, di, need.n), 60);
+  }
 };
 
 /* ============ v4/v5: NHẬP NHANH ============ */
@@ -490,11 +498,14 @@ window.openRegionCell = (slotId, di, name) => { state.regionCell = {slotId, di, 
 window.closeRegionCell = () => { state.regionCell=null; render(); };
 window.saveRegionCell = () => {
   const {slotId, di, name} = state.regionCell;
-  const hint = $('rc-store').value;
+  const hint = $('rc-store').value || '__VP__'; // '__VP__' = văn phòng, đã chọn có chủ đích
   const cur = cellItems(slotId, di).filter(it=>it.n!==name); // 1 người 1 lần trong ô
   cur.push({n:name, h:hint});
   state.regionCell = null;
   writeCell(slotId, di, cur);
+  // Nếu trong ô còn người khác CHƯA từng chọn (h rỗng hẳn) -> hỏi tiếp
+  const next = cur.find(it => !it.h);
+  if (next) setTimeout(()=>openRegionCell(slotId, di, next.n), 60);
 };
 window.setFillMode = (m) => { state.fillMode=m; state.qOpen=null; state.selCell=null; render(); };
 window.pickBrush = (n) => { state.brush = (state.brush===n) ? null : n; render(); };
@@ -611,6 +622,11 @@ window.qCommit = (moveNext, dir) => {
     if (slots[nsi]) state.qOpen = {slotId: slots[nsi].id, di: ndi};
   }
   if (changed) writeCell(slotId, di, items); else render();
+  // QLV: nếu có người vừa thêm mà chưa gán cửa hàng -> hỏi ngay
+  if (state.scope==='region'){
+    const need = items.find(it => !it.h);
+    if (need){ state.qOpen = null; setTimeout(()=>openRegionCell(slotId, di, need.n), 60); return; }
+  }
   if (state.qOpen) setTimeout(()=>{ const n=$('q-input'); if(n){ n.focus(); n.select(); } }, 0);
 };
 /* --- Điền cả hàng (1 ca × 7 ngày) --- */
@@ -920,7 +936,7 @@ function viewGrid(sw, a, slots, canEdit, locked){
         const it = (raw && typeof raw==='object') ? raw : {n:raw, h:''};
         const n = it.n, tv = rmap[n] && rmap[n].status==='TV';
         const x = (canEdit && (mode==='paint'||mode==='click')) ? `<span class="x" onclick="delName(event,'${slot.id}',${di},'${esc(n)}')">×</span>` : '';
-        const store = it.h ? `<span class="storego">→ ${esc(it.h)}</span>` : '';
+        const store = it.h ? `<span class="storego">→ ${it.h==='__VP__'?'VP':esc(it.h)}</span>` : '';
         return `<span class="tag ${n===MGR?'mgr':(tv?'tv':'')}">${esc(n)}${tv?' ⋆':''}${store}${x}</span>`;
       }).join('');
       const inner = names.length
@@ -1040,7 +1056,7 @@ function viewRegionCellModal(){
   const allStores = Object.keys(state.stores);
   const list = myStores.length ? myStores : allStores;
   const cur = cellItems(slotId, di).find(it=>it.n===name);
-  const curHint = cur ? cur.h : '';
+  const curHint = cur ? (cur.h==='__VP__' ? '' : cur.h) : '';
   return `<div class="modal-bg" onclick="closeRegionCell()"><div class="modal" onclick="event.stopPropagation()">
     <h3 style="margin-bottom:2px">${esc(name)} · ${DAYS[di]} ${fmtDM(addDays(state.week,di))}</h3>
     <p class="xs mut" style="margin-bottom:12px">Ca ${esc(slot?slot.label:'')} · chọn cửa hàng sẽ đi</p>
