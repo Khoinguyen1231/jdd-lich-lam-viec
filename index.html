@@ -167,7 +167,7 @@ const DAYS_SHORT = ['T2','T3','T4','T5','T6','T7','CN'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 const OPEN_H = 9, CLOSE_H = 22, MGR = 'Quản lý';
 const SEED_WEEK = '2026-07-20';
-const DEFAULT_SLOTS = [
+const DEFAULT_SLOTS_TP = [
   {id:'S1', label:'10h – 18h30', start:'10:00', end:'18:30', role:'Quản lý'},
   {id:'S2', label:'9h – 17h30',  start:'09:00', end:'17:30', role:'Quản lý'},
   {id:'S3', label:'13h30 – 22h', start:'13:30', end:'22:00', role:'Quản lý'},
@@ -176,6 +176,16 @@ const DEFAULT_SLOTS = [
   {id:'S6', label:'15h – 18h',   start:'15:00', end:'18:00', role:'Bán hàng'},
   {id:'S7', label:'18h – 22h',   start:'18:00', end:'22:00', role:'Bán hàng'}
 ];
+const DEFAULT_SLOTS_TINH = [
+  {id:'T1', label:'10h – 18h30',   start:'10:00', end:'18:30', role:'Quản lý'},
+  {id:'T2', label:'9h – 17h30',    start:'09:00', end:'17:30', role:'Quản lý'},
+  {id:'T3', label:'13h30 – 22h',   start:'13:30', end:'22:00', role:'Quản lý'},
+  {id:'T4', label:'8h30 – 12h30',  start:'08:30', end:'12:30', role:'Bán hàng'},
+  {id:'T5', label:'12h30 – 15h30', start:'12:30', end:'15:30', role:'Bán hàng'},
+  {id:'T6', label:'15h – 18h',     start:'15:00', end:'18:00', role:'Bán hàng'},
+  {id:'T7', label:'18h – 22h',     start:'18:00', end:'22:00', role:'Bán hàng'}
+];
+const DEFAULT_SLOTS = DEFAULT_SLOTS_TP;
 const DEFAULT_REGION_SLOTS = [
   {id:'R1', label:'Ghé cửa hàng sáng',  start:'09:00', end:'12:00', role:'Quản lý vùng'},
   {id:'R2', label:'Ghé cửa hàng chiều', start:'14:00', end:'18:00', role:'Quản lý vùng'},
@@ -219,9 +229,16 @@ const state = {
   qOpen: null,            // {slotId,di} — ô đang gõ
   qSug: -1,
   regionCell: null,       // {slotId,di,name} — QLV đang chọn store để đi               // vị trí gợi ý đang chọn
+  slotTab: 'store_tp',    // bộ ca đang xem trong tab Ca làm: store_tp | store_tinh | region
 };
 function pool(){ return state.scope==='region' ? state.regions : state.stores; }
-function curSlots(){ return state.slots[state.scope] || []; }
+/* Bộ ca của thực thể đang xem: region -> region; store -> theo grp (tp/tinh) */
+function slotScopeOf(code){
+  if (state.scope==='region') return 'region';
+  const grp = (state.stores[code]||{}).grp || 'tp';
+  return grp==='tinh' ? 'store_tinh' : 'store_tp';
+}
+function curSlots(){ return state.slots[slotScopeOf(activeEntity())] || []; }
 function activeEntity(){ return state.session.role==='admin' ? state.curEntity : state.session.entity; }
 function entData(){ return (state.weekData[state.scope]||{})[activeEntity()] || {assign:{}, locked:false}; }
 function rosterOf(code){ return ((pool()[code]||{}).roster)||[]; }
@@ -240,25 +257,30 @@ async function api(action, payload){
 
 /* ---------------- Chế độ thử nghiệm ---------------- */
 function localDb(){
-  let d = localStorage.getItem('jm_lich_v3');
+  let d = localStorage.getItem('jm_lich_v6');
   if (d) return JSON.parse(d);
   const db = {
     settings:{maxDay:8,maxWeek:48,adminPin:'0000'},
-    slots:{store:DEFAULT_SLOTS.map(s=>Object.assign({},s)), region:DEFAULT_REGION_SLOTS.map(s=>Object.assign({},s))},
+    slots:{
+      store_tp: DEFAULT_SLOTS_TP.map(s=>Object.assign({},s)),
+      store_tinh: DEFAULT_SLOTS_TINH.map(s=>Object.assign({},s)),
+      region: DEFAULT_REGION_SLOTS.map(s=>Object.assign({},s))
+    },
     stores:{}, regions:{}, weeks:{store:{}, region:{}}
   };
   db.weeks.store[SEED_WEEK] = {};
   Object.keys(SEED).forEach(c => {
-    db.stores[c] = {name:c, region:'KVMN', pin:'1111', roster: SEED[c].roster.map(n=>({name:n,status:'CT',start:'',end:''}))};
+    const grp = (c.indexOf('JMHCM')===0 || c.indexOf('JMHNI')===0) ? 'tp' : 'tinh';
+    db.stores[c] = {name:c, region:'KVMN', pin:'1111', grp, roster: SEED[c].roster.map(n=>({name:n,status:'CT',start:'',end:''}))};
     db.weeks.store[SEED_WEEK][c] = {assign: SEED[c].assign, locked:false};
   });
   Object.keys(DEFAULT_REGIONS).forEach(c => {
     db.regions[c] = {name:DEFAULT_REGIONS[c].name, pin:'2222', roster: c==='KVMN'?[{name:'QLV miền Nam',status:'CT',start:'',end:''}]:[]};
   });
-  localStorage.setItem('jm_lich_v3', JSON.stringify(db));
+  localStorage.setItem('jm_lich_v6', JSON.stringify(db));
   return db;
 }
-function localSave(db){ localStorage.setItem('jm_lich_v3', JSON.stringify(db)); }
+function localSave(db){ localStorage.setItem('jm_lich_v6', JSON.stringify(db)); }
 function localApi(action, p){
   const db = localDb();
   const isAdmin = p.pin === db.settings.adminPin;
@@ -281,7 +303,7 @@ function localApi(action, p){
     }
     case 'load': {
       const stores={}, regions={};
-      Object.keys(db.stores).forEach(c=>stores[c]={name:db.stores[c].name, region:db.stores[c].region, roster:db.stores[c].roster});
+      Object.keys(db.stores).forEach(c=>stores[c]={name:db.stores[c].name, region:db.stores[c].region, grp:db.stores[c].grp||'tp', roster:db.stores[c].roster});
       Object.keys(db.regions).forEach(c=>regions[c]={name:db.regions[c].name, roster:db.regions[c].roster});
       const week = {store:{}, region:{}};
       Object.keys(db.stores).forEach(c => week.store[c] = ((db.weeks.store||{})[p.week]||{})[c] || {assign:{},locked:false});
@@ -316,7 +338,7 @@ function localApi(action, p){
       const i = list.findIndex(x=>x.id===p.slot.id);
       if (i>=0) list[i] = Object.assign({}, list[i], p.slot);
       else {
-        const prefix = p.scope==='region'?'R':'S';
+        const prefix = p.scope==='region'?'R':(p.scope==='store_tinh'?'T':'S');
         let max=0; list.forEach(x=>{ max=Math.max(max, Number(String(x.id).slice(1))||0); });
         list.push(Object.assign({}, p.slot, {id: prefix+(max+1)}));
       }
@@ -331,8 +353,8 @@ function localApi(action, p){
       if(!isAdmin) throw new Error('Chỉ quản trị.');
       const code = String(p.store.code||'').trim().toUpperCase();
       if(!code) throw new Error('Thiếu mã cửa hàng.');
-      if (db.stores[code]) Object.assign(db.stores[code], {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||db.stores[code].pin});
-      else db.stores[code] = {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||'1111', roster:[]};
+      if (db.stores[code]) Object.assign(db.stores[code], {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||db.stores[code].pin, grp:p.store.grp||db.stores[code].grp||'tp'});
+      else db.stores[code] = {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||'1111', grp:p.store.grp||'tp', roster:[]};
       localSave(db); return {ok:1};
     }
     case 'removeStore': { if(!isAdmin) throw new Error('Chỉ quản trị.'); delete db.stores[p.code]; localSave(db); return {ok:1}; }
@@ -761,9 +783,12 @@ window.toggleTVFields = () => {
   $('emp-start').style.display = tv?'':'none'; $('emp-end').style.display = tv?'':'none';
 };
 /* --- Ca làm việc --- */
+window.setSlotTab = (t) => { state.slotTab = t; render(); };
 window.openSlot = (id) => {
-  state.editSlot = id==='new' ? {id:'', label:'', start:'09:00', end:'13:00', role: state.scope==='region'?'Quản lý vùng':'Bán hàng'}
-    : Object.assign({}, curSlots().find(s=>s.id===id));
+  const scope = state.slotTab;
+  const role = scope==='region' ? 'Quản lý vùng' : 'Bán hàng';
+  state.editSlot = id==='new' ? {id:'', label:'', start:'09:00', end:'13:00', role}
+    : Object.assign({}, (state.slots[scope]||[]).find(s=>s.id===id));
   render();
 };
 window.closeSlot = () => { state.editSlot=null; render(); };
@@ -777,22 +802,22 @@ window.saveSlotForm = () => {
   if (!slot.label) return alert('Nhập tên ca (VD: 9h – 13h).');
   if (toDec(slot.start) >= toDec(slot.end)) return alert('Giờ kết thúc phải sau giờ bắt đầu.');
   state.editSlot = null;
-  mutate('saveSlot', {slot, scope:state.scope}, 'Đã lưu ca '+slot.label);
+  mutate('saveSlot', {slot, scope:state.slotTab}, 'Đã lưu ca '+slot.label);
 };
 window.doDelSlot = (id, label) => {
   if(!confirm('Xóa ca "'+label+'"? Ca sẽ ẩn khỏi lịch mới; dữ liệu lịch cũ vẫn giữ.')) return;
-  mutate('removeSlot', {slotId:id, scope:state.scope}, 'Đã xóa ca '+label);
+  mutate('removeSlot', {slotId:id, scope:state.slotTab}, 'Đã xóa ca '+label);
 };
 /* --- Cửa hàng / khu vực --- */
 window.doAddStore = () => {
   const code=$('st-code').value.trim().toUpperCase();
   if(!code) return alert('Nhập mã cửa hàng (VD: JMHNI05).');
-  mutate('saveStore', {store:{code, name:$('st-name').value.trim()||code, region:$('st-region').value, pin:$('st-pin').value.trim()||'1111'}}, 'Đã thêm cửa hàng '+code);
+  mutate('saveStore', {store:{code, name:$('st-name').value.trim()||code, region:$('st-region').value, grp:$('st-grp').value, pin:$('st-pin').value.trim()||'1111'}}, 'Đã thêm cửa hàng '+code);
 };
 window.doUpdStore = (code) => {
   const row = document.querySelector('[data-store="'+CSS.escape(code)+'"]');
   mutate('saveStore', {store:{code, name:row.querySelector('.f-name').value.trim()||code,
-    region:row.querySelector('.f-region').value, pin:row.querySelector('.f-pin').value.trim()||undefined}}, 'Đã lưu '+code);
+    region:row.querySelector('.f-region').value, grp:row.querySelector('.f-grp').value, pin:row.querySelector('.f-pin').value.trim()||undefined}}, 'Đã lưu '+code);
 };
 window.doDelStore = (code) => {
   if(!confirm('Ngừng hoạt động cửa hàng '+code+'? Cửa hàng sẽ ẩn khỏi app; dữ liệu lịch cũ vẫn giữ trong Sheet.')) return;
@@ -834,7 +859,7 @@ function render(){
   if (state.tab==='kiemsoat') body = viewControl(codes, allA);
   if (state.tab==='baocao') body = viewReport(codes, allA);
   if (state.tab==='cuahang') body = viewEntities();
-  if (state.tab==='calam') body = viewSlots(slots);
+  if (state.tab==='calam') body = viewSlots();
   if (state.tab==='quantri') body = viewAdmin(codes);
 
   const isAdmin = state.session.role==='admin';
@@ -1078,12 +1103,23 @@ function viewCellModal(sw, slots){
 }
 
 /* ---- Tab Ca làm ---- */
-function viewSlots(slots){
+function viewSlots(){
+  const scope = state.slotTab;
+  const slots = state.slots[scope] || [];
+  const label = {store_tp:'Cửa hàng TP (HCM/HN)', store_tinh:'Cửa hàng Tỉnh', region:'Quản lý vùng'}[scope];
   return `
-  <div class="notice blue">Đang sửa ca của <b>${state.scope==='region'?'Quản lý vùng':'Cửa hàng'}</b>. Đổi phạm vi ở thanh trên (Cửa hàng / Quản lý vùng).</div>
+  <div class="modebar" style="margin-bottom:12px">
+    <span class="xs mut" style="font-weight:600">Bộ ca</span>
+    <div class="modetog">
+      <button class="${scope==='store_tp'?'on':''}" onclick="setSlotTab('store_tp')">Cửa hàng TP</button>
+      <button class="${scope==='store_tinh'?'on':''}" onclick="setSlotTab('store_tinh')">Cửa hàng Tỉnh</button>
+      <button class="${scope==='region'?'on':''}" onclick="setSlotTab('region')">Quản lý vùng</button>
+    </div>
+    <span class="xs mut" style="margin-left:auto">Cửa hàng dùng bộ ca nào là do cột <b>Nhóm giờ</b> ở tab Cửa hàng quyết định.</span>
+  </div>
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <h3 style="margin:0">Ca làm việc <span class="mut xs" style="font-weight:400">· ${slots.length} ca</span></h3>
+      <h3 style="margin:0">Ca làm việc · ${label} <span class="mut xs" style="font-weight:400">· ${slots.length} ca</span></h3>
       <button class="btn btn-dark btn-sm" style="margin-left:auto" onclick="openSlot('new')">+ Thêm ca</button>
     </div>
     ${slots.length===0?'<p class="sm mut">Chưa có ca nào.</p>':`
@@ -1127,8 +1163,9 @@ function viewRegionCellModal(){
 
 function viewSlotModal(){
   const s = state.editSlot, isNew = !s.id;
+  const scopeLabel = {store_tp:'Cửa hàng TP', store_tinh:'Cửa hàng Tỉnh', region:'Quản lý vùng'}[state.slotTab];
   return `<div class="modal-bg" onclick="closeSlot()"><div class="modal" onclick="event.stopPropagation()">
-    <h3>${isNew?'Thêm ca mới':'Sửa ca'} · ${state.scope==='region'?'Quản lý vùng':'Cửa hàng'}</h3>
+    <h3>${isNew?'Thêm ca mới':'Sửa ca'} · ${scopeLabel}</h3>
     <label class="fld" style="margin-bottom:10px">Tên ca (hiện trên lịch)
       <input id="sl-label" class="field" value="${esc(s.label)}" placeholder="VD: 9h – 13h"></label>
     <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -1152,16 +1189,20 @@ function viewEntities(){
   return `
   <div class="card" style="margin-bottom:16px">
     <h3>Cửa hàng <span class="mut xs" style="font-weight:400">· ${scodes.length} cửa hàng đang hoạt động</span></h3>
-    <div style="overflow-x:auto"><table class="report-table" style="min-width:680px">
-      <tr><th>Mã</th><th>Tên hiển thị</th><th>Khu vực</th><th>PIN mới</th><th style="text-align:right">Nhân sự</th><th></th></tr>
+    <div style="overflow-x:auto"><table class="report-table" style="min-width:760px">
+      <tr><th>Mã</th><th>Tên hiển thị</th><th>Khu vực</th><th>Nhóm giờ</th><th>PIN mới</th><th style="text-align:right">Nhân sự</th><th></th></tr>
       ${scodes.map(c=>`<tr data-store="${esc(c)}">
         <td><b>${esc(c)}</b></td>
-        <td><input class="f-name" value="${esc(state.stores[c].name||c)}" style="width:150px"></td>
-        <td><select class="f-region" style="width:110px">
+        <td><input class="f-name" value="${esc(state.stores[c].name||c)}" style="width:140px"></td>
+        <td><select class="f-region" style="width:100px">
           <option value="">— chưa gán —</option>
           ${rcodes.map(r=>`<option value="${r}" ${state.stores[c].region===r?'selected':''}>${r}</option>`).join('')}
         </select></td>
-        <td><input class="f-pin" placeholder="(trống = giữ)" style="width:110px"></td>
+        <td><select class="f-grp" style="width:100px">
+          <option value="tp" ${(state.stores[c].grp||'tp')==='tp'?'selected':''}>TP (HCM/HN)</option>
+          <option value="tinh" ${state.stores[c].grp==='tinh'?'selected':''}>Tỉnh</option>
+        </select></td>
+        <td><input class="f-pin" placeholder="(trống = giữ)" style="width:100px"></td>
         <td style="text-align:right">${(state.stores[c].roster||[]).length}</td>
         <td style="text-align:right;white-space:nowrap">
           <button class="btn btn-line btn-sm" onclick="doUpdStore('${esc(c)}')">Lưu</button>
@@ -1170,11 +1211,13 @@ function viewEntities(){
     </table></div>
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
       <label class="fld">Mã cửa hàng mới<input id="st-code" placeholder="VD: JMHNI05" style="width:130px"></label>
-      <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:160px"></label>
-      <label class="fld">Khu vực<select id="st-region" style="width:120px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
+      <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:150px"></label>
+      <label class="fld">Khu vực<select id="st-region" style="width:110px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
+      <label class="fld">Nhóm giờ<select id="st-grp" style="width:120px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option></select></label>
       <label class="fld">PIN<input id="st-pin" placeholder="1111" style="width:90px"></label>
       <button class="btn btn-dark" onclick="doAddStore()">+ Thêm cửa hàng</button>
     </div>
+    <p class="xs mut" style="margin-top:10px"><b>Nhóm giờ</b> quyết định cửa hàng dùng bộ ca nào (sửa bộ ca ở tab Ca làm). TP = giờ HCM/HN, Tỉnh = mở sớm hơn.</p>
   </div>
   <div class="card">
     <h3>Khu vực (Quản lý vùng)</h3>
