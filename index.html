@@ -100,6 +100,7 @@ h3{font-size:15px;margin-bottom:10px;font-weight:600}
 .report-table{width:100%;font-size:13px}
 .report-table th{color:var(--mut);font-weight:600;text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
 .report-table td{padding:7px 8px;border-bottom:1px solid #f5f5f4}
+.report-table select,.report-table input{max-width:100%}
 .savemsg{font-size:12px} .savemsg.err{color:#f87171} .savemsg.ok{color:#fcd34d}
 .notice{padding:10px 13px;border-radius:10px;font-size:13px;margin-bottom:12px}
 .notice.red{background:var(--bad-soft);color:var(--bad);border:1px solid #fecaca}
@@ -1194,12 +1195,12 @@ function viewEntities(){
       ${scodes.map(c=>`<tr data-store="${esc(c)}">
         <td><b>${esc(c)}</b></td>
         <td><input class="f-name" value="${esc(state.stores[c].name||c)}" style="width:140px"></td>
-        <td><select class="f-region" style="width:100px">
+        <td><select class="f-region" style="width:120px">
           <option value="">— chưa gán —</option>
           ${rcodes.map(r=>`<option value="${r}" ${state.stores[c].region===r?'selected':''}>${r}</option>`).join('')}
         </select></td>
-        <td><select class="f-grp" style="width:100px">
-          <option value="tp" ${(state.stores[c].grp||'tp')==='tp'?'selected':''}>TP (HCM/HN)</option>
+        <td><select class="f-grp" style="width:130px">
+          <option value="tp" ${(state.stores[c].grp||'tp')==='tp'?'selected':''}>TP</option>
           <option value="tinh" ${state.stores[c].grp==='tinh'?'selected':''}>Tỉnh</option>
         </select></td>
         <td><input class="f-pin" placeholder="(trống = giữ)" style="width:100px"></td>
@@ -1213,7 +1214,7 @@ function viewEntities(){
       <label class="fld">Mã cửa hàng mới<input id="st-code" placeholder="VD: JMHNI05" style="width:130px"></label>
       <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:150px"></label>
       <label class="fld">Khu vực<select id="st-region" style="width:110px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
-      <label class="fld">Nhóm giờ<select id="st-grp" style="width:120px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option></select></label>
+      <label class="fld">Nhóm giờ<select id="st-grp" style="width:140px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option></select></label>
       <label class="fld">PIN<input id="st-pin" placeholder="1111" style="width:90px"></label>
       <button class="btn btn-dark" onclick="doAddStore()">+ Thêm cửa hàng</button>
     </div>
