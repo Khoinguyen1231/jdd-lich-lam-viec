@@ -1,1537 +1,780 @@
 <!doctype html>
 <html lang="vi">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JM Lịch làm việc</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --ink: #1c1917;
-      --paper: #f6f5f3;
-      --card: #fff;
-      --line: #e7e5e4;
-      --mut: #78716c;
-      --rose: #9f1239;
-      --rose-soft: #ffe4e6;
-      --ok: #047857;
-      --ok-soft: #d1fae5;
-      --warn: #b45309;
-      --warn-soft: #fef3c7;
-      --bad: #b91c1c;
-      --bad-soft: #fee2e2;
-      --blue: #1e40af;
-      --blue-soft: #dbeafe;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0
-    }
-
-    body {
-      font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: var(--paper);
-      color: var(--ink);
-      font-size: 14px;
-      font-variant-numeric: tabular-nums
-    }
-
-    button {
-      font: inherit;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: inherit
-    }
-
-    input,
-    select {
-      font: inherit;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px 10px;
-      background: #fff;
-      color: var(--ink)
-    }
-
-    input:focus,
-    select:focus {
-      outline: 2px solid #d6d3d1;
-      outline-offset: 1px
-    }
-
-    table {
-      border-collapse: collapse
-    }
-
-    .btn {
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 500
-    }
-
-    .btn-dark {
-      background: var(--ink);
-      color: #fff
-    }
-
-    .btn-dark:hover {
-      background: #44403c
-    }
-
-    .btn-rose {
-      background: var(--rose);
-      color: #fff
-    }
-
-    .btn-rose:hover {
-      background: #be123c
-    }
-
-    .btn-line {
-      border: 1px solid var(--line);
-      background: #fff
-    }
-
-    .btn-line:hover {
-      background: var(--paper)
-    }
-
-    .btn-sm {
-      padding: 6px 11px;
-      font-size: 12px;
-      border-radius: 7px
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 1px 2px rgba(28, 25, 23, .04)
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-weight: 600;
-      white-space: nowrap
-    }
-
-    .pill-lock {
-      background: var(--bad-soft);
-      color: var(--bad)
-    }
-
-    .pill-open {
-      background: var(--ok-soft);
-      color: var(--ok)
-    }
-
-    .pill-tv {
-      background: var(--warn-soft);
-      color: var(--warn)
-    }
-
-    .pill-ct {
-      background: #e7e5e4;
-      color: #44403c
-    }
-
-    .mut {
-      color: var(--mut)
-    }
-
-    .xs {
-      font-size: 11px
-    }
-
-    .sm {
-      font-size: 13px
-    }
-
-    header.top {
-      background: var(--ink);
-      color: #fafaf9;
-      padding: 12px 18px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px
-    }
-
-    header.top .brand {
-      font-weight: 700;
-      font-size: 17px
-    }
-
-    header.top .brand em {
-      color: #fda4af;
-      font-style: normal
-    }
-
-    header.top .who {
-      font-size: 12px;
-      color: #a8a29e;
-      border-left: 1px solid #44403c;
-      padding-left: 12px
-    }
-
-    .toolbar {
-      background: #fff;
-      border-bottom: 1px solid var(--line);
-      padding: 10px 18px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      z-index: 20
-    }
-
-    .weeknav {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 3px;
-      position: relative
-    }
-
-    .weeknav .arrow {
-      width: 30px;
-      height: 30px;
-      border-radius: 7px;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center
-    }
-
-    .weeknav .arrow:hover {
-      background: #e7e5e4
-    }
-
-    .weeknav .wlabel {
-      padding: 5px 10px;
-      border-radius: 7px;
-      font-weight: 600;
-      font-size: 13px;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 7px
-    }
-
-    .weeknav .wlabel:hover {
-      background: #e7e5e4
-    }
-
-    .cal {
-      position: absolute;
-      top: 44px;
-      left: 0;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: 0 12px 32px rgba(28, 25, 23, .16);
-      padding: 14px;
-      z-index: 40;
-      width: 296px
-    }
-
-    .cal-head {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 10px
-    }
-
-    .cal-head select {
-      padding: 5px 6px;
-      font-weight: 600;
-      font-size: 13px
-    }
-
-    .cal-nav {
-      width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px
-    }
-
-    .cal-nav:hover {
-      background: var(--paper)
-    }
-
-    .cal table {
-      width: 100%;
-      table-layout: fixed
-    }
-
-    .cal th {
-      font-size: 10px;
-      color: var(--mut);
-      font-weight: 600;
-      padding: 4px 0;
-      text-align: center
-    }
-
-    .cal td {
-      padding: 1px
-    }
-
-    .cal .d {
-      width: 100%;
-      height: 30px;
-      border-radius: 7px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center
-    }
-
-    .cal .d:hover {
-      background: var(--paper)
-    }
-
-    .cal .d.out {
-      color: #d6d3d1
-    }
-
-    .cal .d.today {
-      box-shadow: inset 0 0 0 1.5px var(--rose);
-      color: var(--rose);
-      font-weight: 700
-    }
-
-    .cal tr.wk:hover .d {
-      background: var(--rose-soft)
-    }
-
-    .cal tr.wk.on .d {
-      background: var(--rose);
-      color: #fff;
-      border-radius: 0
-    }
-
-    .cal tr.wk.on td:first-child .d {
-      border-radius: 7px 0 0 7px
-    }
-
-    .cal tr.wk.on td:last-child .d {
-      border-radius: 0 7px 7px 0
-    }
-
-    .cal tr.wk {
-      cursor: pointer
-    }
-
-    .cal .wkno {
-      font-size: 10px;
-      color: #d6d3d1;
-      width: 22px;
-      text-align: center
-    }
-
-    .cal-foot {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-      border-top: 1px solid var(--line);
-      padding-top: 10px
-    }
-
-    .tabs {
-      margin-left: auto;
-      display: flex;
-      gap: 2px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 3px;
-      flex-wrap: wrap
-    }
-
-    .tabs button {
-      padding: 6px 12px;
-      border-radius: 8px;
-      color: var(--mut);
-      font-size: 13px;
-      font-weight: 500
-    }
-
-    .tabs button.on {
-      background: var(--ink);
-      color: #fff
-    }
-
-    .badge {
-      background: var(--bad);
-      color: #fff;
-      border-radius: 999px;
-      font-size: 10px;
-      padding: 1px 6px;
-      margin-left: 5px;
-      vertical-align: 1px
-    }
-
-    .scopetog {
-      display: flex;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 3px
-    }
-
-    .scopetog button {
-      padding: 5px 11px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--mut)
-    }
-
-    .scopetog button.on {
-      background: var(--blue);
-      color: #fff
-    }
-
-    main {
-      padding: 18px;
-      max-width: 1100px;
-      margin: 0 auto
-    }
-
-    .scroll {
-      overflow-x: auto;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      box-shadow: 0 1px 2px rgba(28, 25, 23, .04)
-    }
-
-    .grid {
-      width: 100%;
-      min-width: 920px;
-      font-size: 13px
-    }
-
-    .grid th {
-      background: #fafaf9;
-      color: var(--mut);
-      font-weight: 600;
-      padding: 9px 6px;
-      text-align: center;
-      border-bottom: 1px solid var(--line)
-    }
-
-    .grid th:first-child,
-    .grid td:first-child {
-      position: sticky;
-      left: 0;
-      z-index: 2;
-      background: #fff
-    }
-
-    .grid th:first-child {
-      background: #fafaf9;
-      text-align: left;
-      padding-left: 14px;
-      width: 150px;
-      z-index: 3
-    }
-
-    .grid td {
-      padding: 3px;
-      vertical-align: top;
-      border-top: 1px solid #f5f5f4
-    }
-
-    .grid td.slotinfo {
-      padding: 9px 6px 9px 14px;
-      border-right: 1px solid var(--line)
-    }
-
-    .grid tr.sep td {
-      border-top: 2px solid var(--line)
-    }
-
-    .cell {
-      width: 100%;
-      min-height: 48px;
-      text-align: left;
-      border-radius: 9px;
-      padding: 6px 7px;
-      border: 1px solid var(--line);
-      background: #fafaf9;
-      transition: .12s
-    }
-
-    .cell.empty {
-      border-style: dashed;
-      background: #fff
-    }
-
-    .cell.warn {
-      border-color: #fca5a5;
-      background: var(--bad-soft)
-    }
-
-    .cell.canedit:hover {
-      border-color: #a8a29e;
-      box-shadow: 0 1px 3px rgba(28, 25, 23, .08)
-    }
-
-    .cell[disabled] {
-      cursor: default;
-      opacity: .92
-    }
-
-    .tag {
-      display: inline-block;
-      font-size: 11px;
-      background: #e7e5e4;
-      color: #292524;
-      border-radius: 6px;
-      padding: 1px 7px;
-      margin: 1px;
-      font-weight: 500
-    }
-
-    .tag.mgr {
-      background: var(--rose-soft);
-      color: var(--rose)
-    }
-
-    .tag.tv {
-      background: var(--warn-soft);
-      color: var(--warn)
-    }
-
-    .totrow td {
-      background: #fafaf9;
-      font-weight: 600;
-      text-align: center;
-      padding: 9px 6px
-    }
-
-    .totrow td:first-child {
-      text-align: left;
-      padding-left: 14px
-    }
-
-    .warnitem {
-      padding: 8px 12px;
-      border-radius: 9px;
-      margin-top: 6px;
-      font-size: 13px;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start
-    }
-
-    .warnitem.hard {
-      background: var(--bad-soft);
-      color: var(--bad)
-    }
-
-    .warnitem.soft {
-      background: var(--warn-soft);
-      color: var(--warn)
-    }
-
-    .heat {
-      width: 34px;
-      height: 26px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 11px
-    }
-
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(28, 25, 23, .45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 50
-    }
-
-    .modal {
-      background: #fff;
-      border-radius: 16px;
-      padding: 22px;
-      width: 100%;
-      max-width: 380px;
-      max-height: 85vh;
-      overflow: auto
-    }
-
-    .opt {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 7px 9px;
-      border-radius: 8px;
-      cursor: pointer
-    }
-
-    .opt:hover {
-      background: var(--paper)
-    }
-
-    .login-wrap {
-      min-height: 100vh;
-      background: linear-gradient(160deg, #1c1917 0%, #292524 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px
-    }
-
-    .login-box {
-      width: 100%;
-      max-width: 940px
-    }
-
-    .login-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 14px
-    }
-
-    @media(max-width:860px) {
-      .login-grid {
-        grid-template-columns: 1fr
-      }
-    }
-
-    .field {
-      width: 100%;
-      margin-bottom: 8px
-    }
-
-    h3 {
-      font-size: 15px;
-      margin-bottom: 10px;
-      font-weight: 600
-    }
-
-    .report-table {
-      width: 100%;
-      font-size: 13px
-    }
-
-    .report-table th {
-      color: var(--mut);
-      font-weight: 600;
-      text-align: left;
-      padding: 7px 8px;
-      border-bottom: 1px solid var(--line)
-    }
-
-    .report-table td {
-      padding: 7px 8px;
-      border-bottom: 1px solid #f5f5f4
-    }
-
-    .savemsg {
-      font-size: 12px
-    }
-
-    .savemsg.err {
-      color: #f87171
-    }
-
-    .savemsg.ok {
-      color: #fcd34d
-    }
-
-    .notice {
-      padding: 10px 13px;
-      border-radius: 10px;
-      font-size: 13px;
-      margin-bottom: 12px
-    }
-
-    .notice.red {
-      background: var(--bad-soft);
-      color: var(--bad);
-      border: 1px solid #fecaca
-    }
-
-    .notice.blue {
-      background: var(--blue-soft);
-      color: var(--blue);
-      border: 1px solid #bfdbfe
-    }
-
-    .storechip {
-      font-size: 12px;
-      padding: 5px 12px;
-      border-radius: 999px;
-      border: 1px solid;
-      margin: 3px;
-      font-weight: 500
-    }
-
-    .storechip.lk {
-      background: var(--bad-soft);
-      border-color: #fca5a5;
-      color: var(--bad)
-    }
-
-    .storechip.op {
-      background: var(--ok-soft);
-      border-color: #6ee7b7;
-      color: var(--ok)
-    }
-
-    label.fld {
-      font-size: 11px;
-      color: var(--mut);
-      display: block
-    }
-
-    label.fld input,
-    label.fld select {
-      display: block;
-      margin-top: 3px;
-      color: var(--ink)
-    }
-
-    /* ---- v4: các chế độ nhập nhanh ---- */
-    .modebar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 8px 12px;
-      margin-bottom: 12px
-    }
-
-    .modetog {
-      display: flex;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 3px
-    }
-
-    .modetog button {
-      padding: 5px 11px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--mut)
-    }
-
-    .modetog button.on {
-      background: var(--ink);
-      color: #fff
-    }
-
-    .hintbar {
-      font-size: 11px;
-      color: var(--mut);
-      display: flex;
-      align-items: center;
-      gap: 6px
-    }
-
-    kbd {
-      font-family: inherit;
-      font-size: 10px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-bottom-width: 2px;
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-weight: 600
-    }
-
-    /* Bảng chọn người (palette) */
-    .palette {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      background: var(--blue-soft);
-      border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      padding: 9px 12px;
-      margin-bottom: 12px
-    }
-
-    .pchip {
-      font-size: 12px;
-      font-weight: 600;
-      border-radius: 8px;
-      padding: 6px 12px;
-      border: 1.5px solid transparent;
-      background: #fff;
-      color: var(--ink);
-      user-select: none
-    }
-
-    .pchip:hover {
-      border-color: var(--blue)
-    }
-
-    .pchip.on {
-      background: var(--blue);
-      color: #fff;
-      box-shadow: 0 2px 6px rgba(30, 64, 175, .3)
-    }
-
-    .pchip.tvc {
-      background: var(--warn-soft);
-      color: var(--warn)
-    }
-
-    .pchip.tvc.on {
-      background: var(--warn);
-      color: #fff
-    }
-
-    .pchip.eraser.on {
-      background: var(--bad);
-      color: #fff
-    }
-
-    .pchip[draggable=true] {
-      cursor: grab
-    }
-
-    .pchip[draggable=true]:active {
-      cursor: grabbing
-    }
-
-    /* Ô lịch ở các chế độ nhập */
-    .cell.paint {
-      cursor: copy
-    }
-
-    .cell.paint:hover {
-      border-color: var(--blue);
-      background: var(--blue-soft)
-    }
-
-    .cell.dragover {
-      border: 2px dashed var(--blue) !important;
-      background: var(--blue-soft) !important
-    }
-
-    .cell.sel {
-      box-shadow: inset 0 0 0 2px var(--blue)
-    }
-
-    .cell.copied {
-      box-shadow: inset 0 0 0 2px var(--ok)
-    }
-
-    /* Ô gõ nhanh */
-    .qwrap {
-      position: relative
-    }
-
-    .qinput {
-      width: 100%;
-      min-height: 48px;
-      border-radius: 9px;
-      padding: 6px 7px;
-      border: 1px solid var(--line);
-      background: #fff;
-      font-size: 11px;
-      resize: none;
-      line-height: 1.5;
-      font-family: inherit
-    }
-
-    .qinput:focus {
-      outline: 2px solid var(--blue);
-      outline-offset: 0;
-      border-color: var(--blue)
-    }
-
-    .qinput.bad {
-      border-color: #fca5a5;
-      background: var(--bad-soft)
-    }
-
-    .sugg {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      box-shadow: 0 8px 24px rgba(28, 25, 23, .16);
-      z-index: 30;
-      max-height: 180px;
-      overflow: auto;
-      min-width: 130px
-    }
-
-    .sugg div {
-      padding: 6px 9px;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px
-    }
-
-    .sugg div:hover,
-    .sugg div.act {
-      background: var(--blue-soft)
-    }
-
-    .tag.del {
-      cursor: pointer;
-      padding-right: 4px
-    }
-
-    .tag .x {
-      opacity: .45;
-      margin-left: 3px;
-      font-weight: 700
-    }
-
-    .tag .x:hover {
-      opacity: 1;
-      color: var(--bad)
-    }
-
-    .rowfill {
-      font-size: 10px;
-      color: #d6d3d1;
-      padding: 0 4px;
-      border-radius: 5px
-    }
-
-    .rowfill:hover {
-      color: var(--blue);
-      background: var(--blue-soft)
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JM Lịch làm việc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1c1917; --paper:#f6f5f3; --card:#fff; --line:#e7e5e4; --mut:#78716c;
+  --rose:#9f1239; --rose-soft:#ffe4e6; --ok:#047857; --ok-soft:#d1fae5;
+  --warn:#b45309; --warn-soft:#fef3c7; --bad:#b91c1c; --bad-soft:#fee2e2;
+  --blue:#1e40af; --blue-soft:#dbeafe;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:"Be Vietnam Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--ink)}
+input:focus,select:focus{outline:2px solid #d6d3d1;outline-offset:1px}
+table{border-collapse:collapse}
+.btn{border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500}
+.btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:#44403c}
+.btn-rose{background:var(--rose);color:#fff}.btn-rose:hover{background:#be123c}
+.btn-line{border:1px solid var(--line);background:#fff}.btn-line:hover{background:var(--paper)}
+.btn-sm{padding:6px 11px;font-size:12px;border-radius:7px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 2px rgba(28,25,23,.04)}
+.pill{font-size:11px;padding:3px 10px;border-radius:999px;font-weight:600;white-space:nowrap}
+.pill-lock{background:var(--bad-soft);color:var(--bad)} .pill-open{background:var(--ok-soft);color:var(--ok)}
+.pill-tv{background:var(--warn-soft);color:var(--warn)} .pill-ct{background:#e7e5e4;color:#44403c}
+.mut{color:var(--mut)} .xs{font-size:11px} .sm{font-size:13px}
+header.top{background:var(--ink);color:#fafaf9;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+header.top .brand{font-weight:700;font-size:17px}
+header.top .brand em{color:#fda4af;font-style:normal}
+header.top .who{font-size:12px;color:#a8a29e;border-left:1px solid #44403c;padding-left:12px}
+.toolbar{background:#fff;border-bottom:1px solid var(--line);padding:10px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+.weeknav{display:flex;align-items:center;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px;position:relative}
+.weeknav .arrow{width:30px;height:30px;border-radius:7px;font-size:16px;display:flex;align-items:center;justify-content:center}
+.weeknav .arrow:hover{background:#e7e5e4}
+.weeknav .wlabel{padding:5px 10px;border-radius:7px;font-weight:600;font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.weeknav .wlabel:hover{background:#e7e5e4}
+.cal{position:absolute;top:44px;left:0;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(28,25,23,.16);padding:14px;z-index:40;width:296px}
+.cal-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.cal-head select{padding:5px 6px;font-weight:600;font-size:13px}
+.cal-nav{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.cal-nav:hover{background:var(--paper)}
+.cal table{width:100%;table-layout:fixed}
+.cal th{font-size:10px;color:var(--mut);font-weight:600;padding:4px 0;text-align:center}
+.cal td{padding:1px}
+.cal .d{width:100%;height:30px;border-radius:7px;font-size:12px;display:flex;align-items:center;justify-content:center}
+.cal .d:hover{background:var(--paper)}
+.cal .d.out{color:#d6d3d1}
+.cal .d.today{box-shadow:inset 0 0 0 1.5px var(--rose);color:var(--rose);font-weight:700}
+.cal tr.wk:hover .d{background:var(--rose-soft)}
+.cal tr.wk.on .d{background:var(--rose);color:#fff;border-radius:0}
+.cal tr.wk.on td:first-child .d{border-radius:7px 0 0 7px} .cal tr.wk.on td:last-child .d{border-radius:0 7px 7px 0}
+.cal tr.wk{cursor:pointer}
+.cal .wkno{font-size:10px;color:#d6d3d1;width:22px;text-align:center}
+.cal-foot{display:flex;gap:6px;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.tabs{margin-left:auto;display:flex;gap:2px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px;flex-wrap:wrap}
+.tabs button{padding:6px 12px;border-radius:8px;color:var(--mut);font-size:13px;font-weight:500}
+.tabs button.on{background:var(--ink);color:#fff}
+.badge{background:var(--bad);color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;margin-left:5px;vertical-align:1px}
+.scopetog{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px}
+.scopetog button{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:500;color:var(--mut)}
+.scopetog button.on{background:var(--blue);color:#fff}
+main{padding:18px;max-width:1100px;margin:0 auto}
+.scroll{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(28,25,23,.04)}
+.grid{width:100%;min-width:920px;font-size:13px}
+.grid th{background:#fafaf9;color:var(--mut);font-weight:600;padding:9px 6px;text-align:center;border-bottom:1px solid var(--line)}
+.grid th:first-child,.grid td:first-child{position:sticky;left:0;z-index:2;background:#fff}
+.grid th:first-child{background:#fafaf9;text-align:left;padding-left:14px;width:150px;z-index:3}
+.grid td{padding:3px;vertical-align:top;border-top:1px solid #f5f5f4}
+.grid td.slotinfo{padding:9px 6px 9px 14px;border-right:1px solid var(--line)}
+.grid tr.sep td{border-top:2px solid var(--line)}
+.cell{width:100%;min-height:48px;text-align:left;border-radius:9px;padding:6px 7px;border:1px solid var(--line);background:#fafaf9;transition:.12s}
+.cell.empty{border-style:dashed;background:#fff}
+.cell.warn{border-color:#fca5a5;background:var(--bad-soft)}
+.cell.canedit:hover{border-color:#a8a29e;box-shadow:0 1px 3px rgba(28,25,23,.08)}
+.cell[disabled]{cursor:default;opacity:.92}
+.tag{display:inline-block;font-size:11px;background:#e7e5e4;color:#292524;border-radius:6px;padding:1px 7px;margin:1px;font-weight:500}
+.tag.mgr{background:var(--rose-soft);color:var(--rose)}
+.tag.tv{background:var(--warn-soft);color:var(--warn)}
+.totrow td{background:#fafaf9;font-weight:600;text-align:center;padding:9px 6px}
+.totrow td:first-child{text-align:left;padding-left:14px}
+.warnitem{padding:8px 12px;border-radius:9px;margin-top:6px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.warnitem.hard{background:var(--bad-soft);color:var(--bad)}
+.warnitem.soft{background:var(--warn-soft);color:var(--warn)}
+.heat{width:34px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px}
+.modal-bg{position:fixed;inset:0;background:rgba(28,25,23,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{background:#fff;border-radius:16px;padding:22px;width:100%;max-width:380px;max-height:85vh;overflow:auto}
+.opt{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer}
+.opt:hover{background:var(--paper)}
+.login-wrap{min-height:100vh;background:linear-gradient(160deg,#1c1917 0%,#292524 100%);display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{width:100%;max-width:940px}
+.login-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:860px){.login-grid{grid-template-columns:1fr}}
+.field{width:100%;margin-bottom:8px}
+h3{font-size:15px;margin-bottom:10px;font-weight:600}
+.report-table{width:100%;font-size:13px}
+.report-table th{color:var(--mut);font-weight:600;text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+.report-table td{padding:7px 8px;border-bottom:1px solid #f5f5f4}
+.savemsg{font-size:12px} .savemsg.err{color:#f87171} .savemsg.ok{color:#fcd34d}
+.notice{padding:10px 13px;border-radius:10px;font-size:13px;margin-bottom:12px}
+.notice.red{background:var(--bad-soft);color:var(--bad);border:1px solid #fecaca}
+.notice.blue{background:var(--blue-soft);color:var(--blue);border:1px solid #bfdbfe}
+.storechip{font-size:12px;padding:5px 12px;border-radius:999px;border:1px solid;margin:3px;font-weight:500}
+.storechip.lk{background:var(--bad-soft);border-color:#fca5a5;color:var(--bad)}
+.storechip.op{background:var(--ok-soft);border-color:#6ee7b7;color:var(--ok)}
+label.fld{font-size:11px;color:var(--mut);display:block}
+label.fld input,label.fld select{display:block;margin-top:3px;color:var(--ink)}
+
+/* ---- v4: các chế độ nhập nhanh ---- */
+.modebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-bottom:12px}
+.modetog{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:3px}
+.modetog button{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:500;color:var(--mut)}
+.modetog button.on{background:var(--ink);color:#fff}
+.hintbar{font-size:11px;color:var(--mut);display:flex;align-items:center;gap:6px}
+kbd{font-family:inherit;font-size:10px;background:var(--paper);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 5px;font-weight:600}
+
+/* Bảng chọn người (palette) */
+.palette{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--blue-soft);border:1px solid #bfdbfe;border-radius:12px;padding:9px 12px;margin-bottom:12px}
+.pchip{font-size:12px;font-weight:600;border-radius:8px;padding:6px 12px;border:1.5px solid transparent;background:#fff;color:var(--ink);user-select:none}
+.pchip:hover{border-color:var(--blue)}
+.pchip.on{background:var(--blue);color:#fff;box-shadow:0 2px 6px rgba(30,64,175,.3)}
+.pchip.tvc{background:var(--warn-soft);color:var(--warn)}
+.pchip.tvc.on{background:var(--warn);color:#fff}
+.pchip.eraser.on{background:var(--bad);color:#fff}
+.pchip[draggable=true]{cursor:grab}
+.pchip[draggable=true]:active{cursor:grabbing}
+
+/* Ô lịch ở các chế độ nhập */
+.cell.paint{cursor:copy}
+.cell.paint:hover{border-color:var(--blue);background:var(--blue-soft)}
+.cell.dragover{border:2px dashed var(--blue) !important;background:var(--blue-soft) !important}
+.cell.sel{box-shadow:inset 0 0 0 2px var(--blue)}
+.cell.copied{box-shadow:inset 0 0 0 2px var(--ok)}
+
+/* Ô gõ nhanh */
+.qwrap{position:relative}
+.qinput{width:100%;min-height:48px;border-radius:9px;padding:6px 7px;border:1px solid var(--line);background:#fff;font-size:11px;resize:none;line-height:1.5;font-family:inherit}
+.qinput:focus{outline:2px solid var(--blue);outline-offset:0;border-color:var(--blue)}
+.qinput.bad{border-color:#fca5a5;background:var(--bad-soft)}
+.sugg{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 8px 24px rgba(28,25,23,.16);z-index:30;max-height:180px;overflow:auto;min-width:130px}
+.sugg div{padding:6px 9px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.sugg div:hover,.sugg div.act{background:var(--blue-soft)}
+.tag.del{cursor:pointer;padding-right:4px}
+.tag .x{opacity:.45;margin-left:3px;font-weight:700}
+.tag .x:hover{opacity:1;color:var(--bad)}
+.storego{color:var(--blue);font-weight:600;margin-left:3px}
+.tag.mgr .storego{color:var(--rose)}
+.rowfill{font-size:10px;color:#d6d3d1;padding:0 4px;border-radius:5px}
+.rowfill:hover{color:var(--blue);background:var(--blue-soft)}
+</style>
 </head>
-
 <body>
-  <div id="app"></div>
-  <script>
-    /* ============================================================
-       CẤU HÌNH — sửa 2 dòng này khi nối Google Sheets
-       API_URL = '' → CHẾ ĐỘ THỬ NGHIỆM (lưu trên máy này)
-    ============================================================ */
-    const CONFIG = { API_URL: 'https://script.google.com/macros/s/AKfycbx23W3iHFDVAhnTASwRplbhRHAzf3OeIdy-X-YOQ4sgJ8hOImgUcDlf5cS35ihFk0QdSg/exec', TOKEN: 'JM2026' };
-    const DAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
-    const DAYS_SHORT = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-    const MONTHS = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
-    const OPEN_H = 9, CLOSE_H = 22, MGR = 'Quản lý';
-    const SEED_WEEK = '2026-07-20';
-    const DEFAULT_SLOTS = [
-      { id: 'S1', label: '10h – 18h30', start: '10:00', end: '18:30', role: 'Quản lý' },
-      { id: 'S2', label: '9h – 17h30', start: '09:00', end: '17:30', role: 'Quản lý' },
-      { id: 'S3', label: '13h30 – 22h', start: '13:30', end: '22:00', role: 'Quản lý' },
-      { id: 'S4', label: '9h – 13h', start: '09:00', end: '13:00', role: 'Bán hàng' },
-      { id: 'S5', label: '13h – 16h', start: '13:00', end: '16:00', role: 'Bán hàng' },
-      { id: 'S6', label: '15h – 18h', start: '15:00', end: '18:00', role: 'Bán hàng' },
-      { id: 'S7', label: '18h – 22h', start: '18:00', end: '22:00', role: 'Bán hàng' }
-    ];
-    const DEFAULT_REGION_SLOTS = [
-      { id: 'R1', label: 'Ghé cửa hàng sáng', start: '09:00', end: '12:00', role: 'Quản lý vùng' },
-      { id: 'R2', label: 'Ghé cửa hàng chiều', start: '14:00', end: '18:00', role: 'Quản lý vùng' },
-      { id: 'R3', label: 'Họp / văn phòng', start: '09:00', end: '17:00', role: 'Quản lý vùng' }
-    ];
-    const DEFAULT_REGIONS = { KVMN: { name: 'Khu vực miền Nam' }, KVMB1: { name: 'Khu vực miền Bắc 01' }, KVMB2: { name: 'Khu vực miền Bắc 02' } };
-    const SEED = { "JMHCM01": { "roster": ["Hải", "Thy", "Trang", "Uyên"], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] }, "S4": { "0": ["Uyên", "Thy"], "1": ["Thy", "Uyên"], "2": ["Uyên", "Hải"], "3": ["Uyên", "Trang"], "4": ["Uyên", "Thy"], "5": ["Uyên", "Thy"], "6": ["Uyên", "Thy"] }, "S5": { "0": ["Hải"], "1": ["Thy"], "2": ["Uyên"], "3": ["Uyên"], "4": ["Uyên", "Thy"], "5": ["Uyên", "Thy"], "6": ["Uyên", "Thy"] }, "S6": { "0": ["Hải", "Trang"], "1": ["Hải", "Trang"], "2": ["Trang", "Thy"], "3": ["Hải", "Thy"], "4": ["Hải", "Trang"], "5": ["Hải", "Trang"], "6": ["Hải", "Trang"] }, "S7": { "1": ["Hải", "Trang"], "2": ["Trang", "Thy"], "3": ["Hải", "Thy"], "4": ["Hải", "Trang"], "5": ["Hải", "Trang"], "6": ["Hải", "Trang"] } } }, "JMHCM02": { "roster": ["Dah", "Huyền", "Ngân", "Nhi"], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] }, "S4": { "0": ["Nhi", "Huyền"], "1": ["Ngân", "Dah"] }, "S5": { "0": ["Nhi", "Huyền"] }, "S6": { "0": ["Dah", "Ngân"] } } }, "JMHCM05": { "roster": ["Châu", "Nhi", "Trang", "Tường", "Vy"], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S4": { "0": ["Trang", "Châu"], "1": ["Châu"] }, "S5": { "0": ["Châu", "Trang"], "1": ["Trang"] }, "S6": { "0": ["Tường", "Vy"], "6": ["Nhi"] }, "S7": { "0": ["Tường", "Vy"] } } }, "JMHCM06": { "roster": ["Dương", "Mỵ", "Trang", "Trinh"], "assign": { "S4": { "0": ["Mỵ", "Dương"], "2": ["Trang"] }, "S5": { "1": ["Trinh"] }, "S6": { "0": ["Dương"], "1": ["Trang"], "3": ["Dương"] }, "S7": { "0": ["Dương"] } } }, "JMHCM08": { "roster": ["Ngọc", "Trang", "Trân", "Yến"], "assign": { "S1": { "0": ["Quản lý"] }, "S4": { "0": ["Trang"], "2": ["Yến"] }, "S5": { "1": ["Trân"], "3": ["Ngọc"] }, "S6": { "2": ["Trân"], "3": ["Ngọc"] } } }, "JMHCM10": { "roster": ["Hà", "Ngân", "Quỳnh", "Vy"], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"], "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] }, "S4": { "1": ["Ngân"], "4": ["Vy"] }, "S5": { "0": ["Quỳnh"], "3": ["Hà"] }, "S6": { "0": ["Hà"], "4": ["Ngân"], "6": ["Vy"] }, "S7": { "0": ["Hà"], "1": ["Vy"] } } }, "JMHCM11": { "roster": ["Ngân", "Trân", "Uyên", "Đào"], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"] }, "S4": { "0": ["Ngân", "Đào"] }, "S5": { "1": ["Uyên", "Đào"], "6": ["Uyên", "Đào"] }, "S6": { "1": ["Ngân", "Trân"], "6": ["Ngân", "Trân"] } } }, "JMHCM14": { "roster": ["Mai", "Nga"], "assign": { "S1": { "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] }, "S4": { "0": ["Mai", "Nga"] } } }, "JMBH02": { "roster": [], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] } } }, "JMBDG01": { "roster": [], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] } } }, "JMCTH01": { "roster": [], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] } } }, "JMVTU": { "roster": [], "assign": { "S1": { "0": ["Quản lý"], "1": ["Quản lý"], "2": ["Quản lý"], "3": ["Quản lý"] }, "S3": { "4": ["Quản lý"], "5": ["Quản lý"], "6": ["Quản lý"] } } } };
+<div id="app"></div>
+<script>
+/* ============================================================
+   CẤU HÌNH — sửa 2 dòng này khi nối Google Sheets
+   API_URL = '' → CHẾ ĐỘ THỬ NGHIỆM (lưu trên máy này)
+============================================================ */
+const CONFIG = { API_URL: 'https://script.google.com/macros/s/AKfycbx23W3iHFDVAhnTASwRplbhRHAzf3OeIdy-X-YOQ4sgJ8hOImgUcDlf5cS35ihFk0QdSg/exec', TOKEN: 'JM2026' };
 
-    /* ---------------- Ngày giờ (thuần giờ địa phương) ---------------- */
-    const $ = (id) => document.getElementById(id);
-    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    function toYMD(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-    function parseYMD(ds) { const p = ds.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
-    function todayYMD() { return toYMD(new Date()); }
-    function mondayOf(ds) { const d = parseYMD(ds); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toYMD(d); }
-    function addDays(ds, n) { const d = parseYMD(ds); d.setDate(d.getDate() + n); return toYMD(d); }
-    function fmtDM(ds) { const p = ds.split('-'); return p[2] + '/' + p[1]; }
-    function fmtDMY(ds) { const p = ds.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
-    function diffDays(a, b) { return Math.round((parseYMD(a) - parseYMD(b)) / 86400000); }
-    function toDec(t) { const p = String(t).split(':'); return Number(p[0]) + (Number(p[1] || 0) / 60); }
-    function fmtH(h) { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return mm ? hh + 'h' + mm : hh + 'h'; }
-    function slotHours(s) { return Math.round((toDec(s.end) - toDec(s.start)) * 100) / 100; }
-    /* Tuần thứ mấy trong tháng — theo ngày thứ Hai */
-    function weekLabel(wk) { const p = wk.split('-').map(Number); return 'Tuần ' + (Math.floor((p[2] - 1) / 7) + 1) + ' tháng ' + p[1] + '/' + p[0]; }
+const DAYS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
+const DAYS_SHORT = ['T2','T3','T4','T5','T6','T7','CN'];
+const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+const OPEN_H = 9, CLOSE_H = 22, MGR = 'Quản lý';
+const SEED_WEEK = '2026-07-20';
+const DEFAULT_SLOTS = [
+  {id:'S1', label:'10h – 18h30', start:'10:00', end:'18:30', role:'Quản lý'},
+  {id:'S2', label:'9h – 17h30',  start:'09:00', end:'17:30', role:'Quản lý'},
+  {id:'S3', label:'13h30 – 22h', start:'13:30', end:'22:00', role:'Quản lý'},
+  {id:'S4', label:'9h – 13h',    start:'09:00', end:'13:00', role:'Bán hàng'},
+  {id:'S5', label:'13h – 16h',   start:'13:00', end:'16:00', role:'Bán hàng'},
+  {id:'S6', label:'15h – 18h',   start:'15:00', end:'18:00', role:'Bán hàng'},
+  {id:'S7', label:'18h – 22h',   start:'18:00', end:'22:00', role:'Bán hàng'}
+];
+const DEFAULT_REGION_SLOTS = [
+  {id:'R1', label:'Ghé cửa hàng sáng',  start:'09:00', end:'12:00', role:'Quản lý vùng'},
+  {id:'R2', label:'Ghé cửa hàng chiều', start:'14:00', end:'18:00', role:'Quản lý vùng'},
+  {id:'R3', label:'Họp / văn phòng',    start:'09:00', end:'17:00', role:'Quản lý vùng'}
+];
+const DEFAULT_REGIONS = {KVMN:{name:'Khu vực miền Nam'}, KVMB1:{name:'Khu vực miền Bắc 01'}, KVMB2:{name:'Khu vực miền Bắc 02'}};
+const SEED = {"JMHCM01":{"roster":["Hải","Thy","Trang","Uyên"],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]},"S4":{"0":["Uyên","Thy"],"1":["Thy","Uyên"],"2":["Uyên","Hải"],"3":["Uyên","Trang"],"4":["Uyên","Thy"],"5":["Uyên","Thy"],"6":["Uyên","Thy"]},"S5":{"0":["Hải"],"1":["Thy"],"2":["Uyên"],"3":["Uyên"],"4":["Uyên","Thy"],"5":["Uyên","Thy"],"6":["Uyên","Thy"]},"S6":{"0":["Hải","Trang"],"1":["Hải","Trang"],"2":["Trang","Thy"],"3":["Hải","Thy"],"4":["Hải","Trang"],"5":["Hải","Trang"],"6":["Hải","Trang"]},"S7":{"1":["Hải","Trang"],"2":["Trang","Thy"],"3":["Hải","Thy"],"4":["Hải","Trang"],"5":["Hải","Trang"],"6":["Hải","Trang"]}}},"JMHCM02":{"roster":["Dah","Huyền","Ngân","Nhi"],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]},"S4":{"0":["Nhi","Huyền"],"1":["Ngân","Dah"]},"S5":{"0":["Nhi","Huyền"]},"S6":{"0":["Dah","Ngân"]}}},"JMHCM05":{"roster":["Châu","Nhi","Trang","Tường","Vy"],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S4":{"0":["Trang","Châu"],"1":["Châu"]},"S5":{"0":["Châu","Trang"],"1":["Trang"]},"S6":{"0":["Tường","Vy"],"6":["Nhi"]},"S7":{"0":["Tường","Vy"]}}},"JMHCM06":{"roster":["Dương","Mỵ","Trang","Trinh"],"assign":{"S4":{"0":["Mỵ","Dương"],"2":["Trang"]},"S5":{"1":["Trinh"]},"S6":{"0":["Dương"],"1":["Trang"],"3":["Dương"]},"S7":{"0":["Dương"]}}},"JMHCM08":{"roster":["Ngọc","Trang","Trân","Yến"],"assign":{"S1":{"0":["Quản lý"]},"S4":{"0":["Trang"],"2":["Yến"]},"S5":{"1":["Trân"],"3":["Ngọc"]},"S6":{"2":["Trân"],"3":["Ngọc"]}}},"JMHCM10":{"roster":["Hà","Ngân","Quỳnh","Vy"],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"],"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]},"S4":{"1":["Ngân"],"4":["Vy"]},"S5":{"0":["Quỳnh"],"3":["Hà"]},"S6":{"0":["Hà"],"4":["Ngân"],"6":["Vy"]},"S7":{"0":["Hà"],"1":["Vy"]}}},"JMHCM11":{"roster":["Ngân","Trân","Uyên","Đào"],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"]},"S4":{"0":["Ngân","Đào"]},"S5":{"1":["Uyên","Đào"],"6":["Uyên","Đào"]},"S6":{"1":["Ngân","Trân"],"6":["Ngân","Trân"]}}},"JMHCM14":{"roster":["Mai","Nga"],"assign":{"S1":{"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]},"S4":{"0":["Mai","Nga"]}}},"JMBH02":{"roster":[],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]}}},"JMBDG01":{"roster":[],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]}}},"JMCTH01":{"roster":[],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]}}},"JMVTU":{"roster":[],"assign":{"S1":{"0":["Quản lý"],"1":["Quản lý"],"2":["Quản lý"],"3":["Quản lý"]},"S3":{"4":["Quản lý"],"5":["Quản lý"],"6":["Quản lý"]}}}};
 
-    /* ---------------- Trạng thái ---------------- */
-    const state = {
-      session: null,          // {role:'admin'|'store'|'region', entity, pin}
-      scope: 'store',         // 'store' | 'region' — chỉ admin đổi được
-      week: SEED_WEEK, tab: 'lich', curEntity: null,
-      settings: { maxDay: 8, maxWeek: 48 },
-      slots: { store: [], region: [] },
-      stores: {}, regions: {}, weekData: { store: {}, region: {} },
-      editCell: null, editSlot: null, calOpen: false, calMonth: null,
-      saveMsg: '', loading: false, demo: !CONFIG.API_URL,
-      /* v4 — nhập nhanh */
-      fillMode: 'paint',      // 'paint' | 'type' | 'click'
-      brush: null,            // tên người đang cầm (chế độ tô) | '__ERASE__'
-      clip: null,             // {names:[]} — bộ nhớ copy/paste
-      selCell: null,          // {slotId,di} — ô đang chọn (cho copy/paste)
-      qOpen: null,            // {slotId,di} — ô đang gõ
-      qSug: -1,               // vị trí gợi ý đang chọn
-    };
-    function pool() { return state.scope === 'region' ? state.regions : state.stores; }
-    function curSlots() { return state.slots[state.scope] || []; }
-    function activeEntity() { return state.session.role === 'admin' ? state.curEntity : state.session.entity; }
-    function entData() { return (state.weekData[state.scope] || {})[activeEntity()] || { assign: {}, locked: false }; }
-    function rosterOf(code) { return ((pool()[code] || {}).roster) || []; }
-    function rosterMap(code) { const m = {}; rosterOf(code).forEach(r => m[r.name] = r); return m; }
+/* ---------------- Ngày giờ (thuần giờ địa phương) ---------------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toYMD(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseYMD(ds){ const p=ds.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function todayYMD(){ return toYMD(new Date()); }
+function mondayOf(ds){ const d=parseYMD(ds); d.setDate(d.getDate()-((d.getDay()+6)%7)); return toYMD(d); }
+function addDays(ds,n){ const d=parseYMD(ds); d.setDate(d.getDate()+n); return toYMD(d); }
+function fmtDM(ds){ const p=ds.split('-'); return p[2]+'/'+p[1]; }
+function fmtDMY(ds){ const p=ds.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function diffDays(a,b){ return Math.round((parseYMD(a)-parseYMD(b))/86400000); }
+function toDec(t){ const p=String(t).split(':'); return Number(p[0]) + (Number(p[1]||0)/60); }
+function fmtH(h){ const hh=Math.floor(h), mm=Math.round((h-hh)*60); return mm? hh+'h'+mm : hh+'h'; }
+function slotHours(s){ return Math.round((toDec(s.end)-toDec(s.start))*100)/100; }
+/* Tuần thứ mấy trong tháng — theo ngày thứ Hai */
+function weekLabel(wk){ const p=wk.split('-').map(Number); return 'Tuần '+(Math.floor((p[2]-1)/7)+1)+' tháng '+p[1]+'/'+p[0]; }
 
-    /* ---------------- API ---------------- */
-    async function api(action, payload) {
-      payload = payload || {};
-      if (state.demo) return localApi(action, payload);
-      const body = JSON.stringify(Object.assign({ token: CONFIG.TOKEN, action }, payload));
-      const res = await fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
-      const out = await res.json();
-      if (!out.ok) throw new Error(out.error || 'Lỗi không xác định');
-      return out;
+/* ---------------- Trạng thái ---------------- */
+const state = {
+  session: null,          // {role:'admin'|'store'|'region', entity, pin}
+  scope: 'store',         // 'store' | 'region' — chỉ admin đổi được
+  week: SEED_WEEK, tab: 'lich', curEntity: null,
+  settings: {maxDay:8, maxWeek:48},
+  slots: {store:[], region:[]},
+  stores: {}, regions: {}, weekData: {store:{}, region:{}},
+  editCell: null, editSlot: null, calOpen: false, calMonth: null,
+  saveMsg: '', loading: false, demo: !CONFIG.API_URL,
+  /* v4 — nhập nhanh */
+  fillMode: 'paint',      // 'paint' | 'type' | 'click'
+  brush: null,            // tên người đang cầm (chế độ tô) | '__ERASE__'
+  clip: null,             // {names:[]} — bộ nhớ copy/paste
+  selCell: null,          // {slotId,di} — ô đang chọn (cho copy/paste)
+  qOpen: null,            // {slotId,di} — ô đang gõ
+  qSug: -1,
+  regionCell: null,       // {slotId,di,name} — QLV đang chọn store để đi               // vị trí gợi ý đang chọn
+};
+function pool(){ return state.scope==='region' ? state.regions : state.stores; }
+function curSlots(){ return state.slots[state.scope] || []; }
+function activeEntity(){ return state.session.role==='admin' ? state.curEntity : state.session.entity; }
+function entData(){ return (state.weekData[state.scope]||{})[activeEntity()] || {assign:{}, locked:false}; }
+function rosterOf(code){ return ((pool()[code]||{}).roster)||[]; }
+function rosterMap(code){ const m={}; rosterOf(code).forEach(r=>m[r.name]=r); return m; }
+
+/* ---------------- API ---------------- */
+async function api(action, payload){
+  payload = payload || {};
+  if (state.demo) return localApi(action, payload);
+  const body = JSON.stringify(Object.assign({token: CONFIG.TOKEN, action}, payload));
+  const res = await fetch(CONFIG.API_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body});
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.error || 'Lỗi không xác định');
+  return out;
+}
+
+/* ---------------- Chế độ thử nghiệm ---------------- */
+function localDb(){
+  let d = localStorage.getItem('jm_lich_v3');
+  if (d) return JSON.parse(d);
+  const db = {
+    settings:{maxDay:8,maxWeek:48,adminPin:'0000'},
+    slots:{store:DEFAULT_SLOTS.map(s=>Object.assign({},s)), region:DEFAULT_REGION_SLOTS.map(s=>Object.assign({},s))},
+    stores:{}, regions:{}, weeks:{store:{}, region:{}}
+  };
+  db.weeks.store[SEED_WEEK] = {};
+  Object.keys(SEED).forEach(c => {
+    db.stores[c] = {name:c, region:'KVMN', pin:'1111', roster: SEED[c].roster.map(n=>({name:n,status:'CT',start:'',end:''}))};
+    db.weeks.store[SEED_WEEK][c] = {assign: SEED[c].assign, locked:false};
+  });
+  Object.keys(DEFAULT_REGIONS).forEach(c => {
+    db.regions[c] = {name:DEFAULT_REGIONS[c].name, pin:'2222', roster: c==='KVMN'?[{name:'QLV miền Nam',status:'CT',start:'',end:''}]:[]};
+  });
+  localStorage.setItem('jm_lich_v3', JSON.stringify(db));
+  return db;
+}
+function localSave(db){ localStorage.setItem('jm_lich_v3', JSON.stringify(db)); }
+function localApi(action, p){
+  const db = localDb();
+  const isAdmin = p.pin === db.settings.adminPin;
+  const sc = p.scope || 'store';
+  const pl = sc==='region' ? db.regions : db.stores;
+  const owns = (e) => pl[e] && pl[e].pin === p.pin;
+  const may = (e) => { if (!owns(e) && !isAdmin) throw new Error('Không có quyền với '+e+'.'); };
+  const ensure = (wk,e) => { db.weeks[sc]=db.weeks[sc]||{}; db.weeks[sc][wk]=db.weeks[sc][wk]||{}; db.weeks[sc][wk][e]=db.weeks[sc][wk][e]||{assign:{},locked:false}; return db.weeks[sc][wk][e]; };
+  switch(action){
+    case 'login':
+      if (p.role==='admin'){ if(!isAdmin) throw new Error('Sai mã PIN quản trị.'); return {ok:1, role:'admin'}; }
+      if (p.role==='region'){ if(!db.regions[p.code] || db.regions[p.code].pin!==p.pin) throw new Error('Sai mã PIN khu vực.'); return {ok:1, role:'region', entity:p.code}; }
+      if (!db.stores[p.code] || db.stores[p.code].pin!==p.pin) throw new Error('Sai mã PIN cửa hàng.');
+      return {ok:1, role:'store', entity:p.code};
+    case 'bootstrap': {
+      const s={}, r={};
+      Object.keys(db.stores).forEach(c=>s[c]={name:db.stores[c].name});
+      Object.keys(db.regions).forEach(c=>r[c]={name:db.regions[c].name});
+      return {ok:1, stores:s, regions:r};
     }
-
-    /* ---------------- Chế độ thử nghiệm ---------------- */
-    function localDb() {
-      let d = localStorage.getItem('jm_lich_v3');
-      if (d) return JSON.parse(d);
-      const db = {
-        settings: { maxDay: 8, maxWeek: 48, adminPin: '0000' },
-        slots: { store: DEFAULT_SLOTS.map(s => Object.assign({}, s)), region: DEFAULT_REGION_SLOTS.map(s => Object.assign({}, s)) },
-        stores: {}, regions: {}, weeks: { store: {}, region: {} }
-      };
-      db.weeks.store[SEED_WEEK] = {};
-      Object.keys(SEED).forEach(c => {
-        db.stores[c] = { name: c, region: 'KVMN', pin: '1111', roster: SEED[c].roster.map(n => ({ name: n, status: 'CT', start: '', end: '' })) };
-        db.weeks.store[SEED_WEEK][c] = { assign: SEED[c].assign, locked: false };
-      });
-      Object.keys(DEFAULT_REGIONS).forEach(c => {
-        db.regions[c] = { name: DEFAULT_REGIONS[c].name, pin: '2222', roster: c === 'KVMN' ? [{ name: 'QLV miền Nam', status: 'CT', start: '', end: '' }] : [] };
-      });
-      localStorage.setItem('jm_lich_v3', JSON.stringify(db));
-      return db;
+    case 'load': {
+      const stores={}, regions={};
+      Object.keys(db.stores).forEach(c=>stores[c]={name:db.stores[c].name, region:db.stores[c].region, roster:db.stores[c].roster});
+      Object.keys(db.regions).forEach(c=>regions[c]={name:db.regions[c].name, roster:db.regions[c].roster});
+      const week = {store:{}, region:{}};
+      Object.keys(db.stores).forEach(c => week.store[c] = ((db.weeks.store||{})[p.week]||{})[c] || {assign:{},locked:false});
+      Object.keys(db.regions).forEach(c => week.region[c] = ((db.weeks.region||{})[p.week]||{})[c] || {assign:{},locked:false});
+      return {ok:1, settings:db.settings, slots:db.slots, stores, regions, week};
     }
-    function localSave(db) { localStorage.setItem('jm_lich_v3', JSON.stringify(db)); }
-    function localApi(action, p) {
-      const db = localDb();
-      const isAdmin = p.pin === db.settings.adminPin;
-      const sc = p.scope || 'store';
-      const pl = sc === 'region' ? db.regions : db.stores;
-      const owns = (e) => pl[e] && pl[e].pin === p.pin;
-      const may = (e) => { if (!owns(e) && !isAdmin) throw new Error('Không có quyền với ' + e + '.'); };
-      const ensure = (wk, e) => { db.weeks[sc] = db.weeks[sc] || {}; db.weeks[sc][wk] = db.weeks[sc][wk] || {}; db.weeks[sc][wk][e] = db.weeks[sc][wk][e] || { assign: {}, locked: false }; return db.weeks[sc][wk][e]; };
-      switch (action) {
-        case 'login':
-          if (p.role === 'admin') { if (!isAdmin) throw new Error('Sai mã PIN quản trị.'); return { ok: 1, role: 'admin' }; }
-          if (p.role === 'region') { if (!db.regions[p.code] || db.regions[p.code].pin !== p.pin) throw new Error('Sai mã PIN khu vực.'); return { ok: 1, role: 'region', entity: p.code }; }
-          if (!db.stores[p.code] || db.stores[p.code].pin !== p.pin) throw new Error('Sai mã PIN cửa hàng.');
-          return { ok: 1, role: 'store', entity: p.code };
-        case 'bootstrap': {
-          const s = {}, r = {};
-          Object.keys(db.stores).forEach(c => s[c] = { name: db.stores[c].name });
-          Object.keys(db.regions).forEach(c => r[c] = { name: db.regions[c].name });
-          return { ok: 1, stores: s, regions: r };
-        }
-        case 'load': {
-          const stores = {}, regions = {};
-          Object.keys(db.stores).forEach(c => stores[c] = { name: db.stores[c].name, region: db.stores[c].region, roster: db.stores[c].roster });
-          Object.keys(db.regions).forEach(c => regions[c] = { name: db.regions[c].name, roster: db.regions[c].roster });
-          const week = { store: {}, region: {} };
-          Object.keys(db.stores).forEach(c => week.store[c] = ((db.weeks.store || {})[p.week] || {})[c] || { assign: {}, locked: false });
-          Object.keys(db.regions).forEach(c => week.region[c] = ((db.weeks.region || {})[p.week] || {})[c] || { assign: {}, locked: false });
-          return { ok: 1, settings: db.settings, slots: db.slots, stores, regions, week };
-        }
-        case 'setCell': {
-          may(p.entity);
-          const s = ensure(p.week, p.entity);
-          if (s.locked && !isAdmin) throw new Error('Tuần đã khóa — liên hệ quản trị.');
-          s.assign[p.slotId] = s.assign[p.slotId] || {};
-          if (p.names.length) s.assign[p.slotId][String(p.di)] = p.names; else delete s.assign[p.slotId][String(p.di)];
-          localSave(db); return { ok: 1 };
-        }
-        case 'saveEmployee': {
-          may(p.entity);
-          const r = pl[p.entity].roster;
-          const i = r.findIndex(x => x.name === p.emp.name);
-          if (i >= 0) r[i] = p.emp; else r.push(p.emp);
-          localSave(db); return { ok: 1 };
-        }
-        case 'removeEmployee': { may(p.entity); pl[p.entity].roster = pl[p.entity].roster.filter(x => x.name !== p.name); localSave(db); return { ok: 1 }; }
-        case 'saveSlot': {
-          if (!isAdmin) throw new Error('Chỉ quản trị được sửa ca làm việc.');
-          if (toDec(p.slot.start) >= toDec(p.slot.end)) throw new Error('Giờ kết thúc phải sau giờ bắt đầu.');
-          const list = db.slots[p.scope];
-          const i = list.findIndex(x => x.id === p.slot.id);
-          if (i >= 0) list[i] = Object.assign({}, list[i], p.slot);
-          else {
-            const prefix = p.scope === 'region' ? 'R' : 'S';
-            let max = 0; list.forEach(x => { max = Math.max(max, Number(String(x.id).slice(1)) || 0); });
-            list.push(Object.assign({}, p.slot, { id: prefix + (max + 1) }));
-          }
-          localSave(db); return { ok: 1 };
-        }
-        case 'removeSlot': {
-          if (!isAdmin) throw new Error('Chỉ quản trị được xóa ca.');
-          db.slots[p.scope] = db.slots[p.scope].filter(x => x.id !== p.slotId);
-          localSave(db); return { ok: 1 };
-        }
-        case 'saveStore': {
-          if (!isAdmin) throw new Error('Chỉ quản trị.');
-          const code = String(p.store.code || '').trim().toUpperCase();
-          if (!code) throw new Error('Thiếu mã cửa hàng.');
-          if (db.stores[code]) Object.assign(db.stores[code], { name: p.store.name || code, region: p.store.region || '', pin: p.store.pin || db.stores[code].pin });
-          else db.stores[code] = { name: p.store.name || code, region: p.store.region || '', pin: p.store.pin || '1111', roster: [] };
-          localSave(db); return { ok: 1 };
-        }
-        case 'removeStore': { if (!isAdmin) throw new Error('Chỉ quản trị.'); delete db.stores[p.code]; localSave(db); return { ok: 1 }; }
-        case 'saveRegion': {
-          if (!isAdmin) throw new Error('Chỉ quản trị.');
-          const rc = String(p.region.code || '').trim().toUpperCase();
-          if (!rc) throw new Error('Thiếu mã khu vực.');
-          if (db.regions[rc]) Object.assign(db.regions[rc], { name: p.region.name || rc, pin: p.region.pin || db.regions[rc].pin });
-          else db.regions[rc] = { name: p.region.name || rc, pin: p.region.pin || '2222', roster: [] };
-          localSave(db); return { ok: 1 };
-        }
-        case 'setLock': { if (!isAdmin) throw new Error('Chỉ quản trị.'); ensure(p.week, p.entity).locked = p.locked; localSave(db); return { ok: 1 }; }
-        case 'lockAll': { if (!isAdmin) throw new Error('Chỉ quản trị.'); Object.keys(pl).forEach(c => ensure(p.week, c).locked = p.locked); localSave(db); return { ok: 1 }; }
-        case 'setSettings': { if (!isAdmin) throw new Error('Chỉ quản trị.'); Object.assign(db.settings, p.patch); localSave(db); return { ok: 1 }; }
+    case 'setCell': {
+      may(p.entity);
+      const s = ensure(p.week, p.entity);
+      if (s.locked && !isAdmin) throw new Error('Tuần đã khóa — liên hệ quản trị.');
+      s.assign[p.slotId] = s.assign[p.slotId] || {};
+      if (p.names.length){
+        // region: lưu {n,h}; store: lưu chuỗi
+        s.assign[p.slotId][String(p.di)] = (sc==='region' && p.storeHint)
+          ? p.names.map(n=>({n, h:p.storeHint}))
+          : p.names;
+      } else delete s.assign[p.slotId][String(p.di)];
+      localSave(db); return {ok:1};
+    }
+    case 'saveEmployee': {
+      may(p.entity);
+      const r = pl[p.entity].roster;
+      const i = r.findIndex(x=>x.name===p.emp.name);
+      if (i>=0) r[i]=p.emp; else r.push(p.emp);
+      localSave(db); return {ok:1};
+    }
+    case 'removeEmployee': { may(p.entity); pl[p.entity].roster = pl[p.entity].roster.filter(x=>x.name!==p.name); localSave(db); return {ok:1}; }
+    case 'saveSlot': {
+      if(!isAdmin) throw new Error('Chỉ quản trị được sửa ca làm việc.');
+      if (toDec(p.slot.start) >= toDec(p.slot.end)) throw new Error('Giờ kết thúc phải sau giờ bắt đầu.');
+      const list = db.slots[p.scope];
+      const i = list.findIndex(x=>x.id===p.slot.id);
+      if (i>=0) list[i] = Object.assign({}, list[i], p.slot);
+      else {
+        const prefix = p.scope==='region'?'R':'S';
+        let max=0; list.forEach(x=>{ max=Math.max(max, Number(String(x.id).slice(1))||0); });
+        list.push(Object.assign({}, p.slot, {id: prefix+(max+1)}));
       }
-      throw new Error('Hành động không hợp lệ');
+      localSave(db); return {ok:1};
     }
+    case 'removeSlot': {
+      if(!isAdmin) throw new Error('Chỉ quản trị được xóa ca.');
+      db.slots[p.scope] = db.slots[p.scope].filter(x=>x.id!==p.slotId);
+      localSave(db); return {ok:1};
+    }
+    case 'saveStore': {
+      if(!isAdmin) throw new Error('Chỉ quản trị.');
+      const code = String(p.store.code||'').trim().toUpperCase();
+      if(!code) throw new Error('Thiếu mã cửa hàng.');
+      if (db.stores[code]) Object.assign(db.stores[code], {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||db.stores[code].pin});
+      else db.stores[code] = {name:p.store.name||code, region:p.store.region||'', pin:p.store.pin||'1111', roster:[]};
+      localSave(db); return {ok:1};
+    }
+    case 'removeStore': { if(!isAdmin) throw new Error('Chỉ quản trị.'); delete db.stores[p.code]; localSave(db); return {ok:1}; }
+    case 'saveRegion': {
+      if(!isAdmin) throw new Error('Chỉ quản trị.');
+      const rc = String(p.region.code||'').trim().toUpperCase();
+      if(!rc) throw new Error('Thiếu mã khu vực.');
+      if (db.regions[rc]) Object.assign(db.regions[rc], {name:p.region.name||rc, pin:p.region.pin||db.regions[rc].pin});
+      else db.regions[rc] = {name:p.region.name||rc, pin:p.region.pin||'2222', roster:[]};
+      localSave(db); return {ok:1};
+    }
+    case 'setLock': { if(!isAdmin) throw new Error('Chỉ quản trị.'); ensure(p.week,p.entity).locked=p.locked; localSave(db); return {ok:1}; }
+    case 'lockAll': { if(!isAdmin) throw new Error('Chỉ quản trị.'); Object.keys(pl).forEach(c=>ensure(p.week,c).locked=p.locked); localSave(db); return {ok:1}; }
+    case 'setSettings': { if(!isAdmin) throw new Error('Chỉ quản trị.'); Object.assign(db.settings, p.patch); localSave(db); return {ok:1}; }
+  }
+  throw new Error('Hành động không hợp lệ');
+}
 
-    /* ---------------- Phân tích ---------------- */
-    function analyze(assign, slots, settings) {
-      const byDay = {};
-      slots.forEach(slot => {
-        const bySlot = (assign && assign[slot.id]) || {};
-        Object.keys(bySlot).forEach(di => {
-          (bySlot[di] || []).forEach(name => {
-            byDay[di] = byDay[di] || {}; byDay[di][name] = byDay[di][name] || [];
-            byDay[di][name].push({ label: slot.label, s: toDec(slot.start), e: toDec(slot.end), h: slotHours(slot) });
-          });
-        });
+/* ---------------- Phân tích ---------------- */
+function analyze(assign, slots, settings){
+  const byDay = {};
+  slots.forEach(slot => {
+    const bySlot = (assign && assign[slot.id]) || {};
+    Object.keys(bySlot).forEach(di => {
+      (bySlot[di]||[]).forEach(raw => {
+        const name = (raw && typeof raw==='object') ? raw.n : raw;
+        byDay[di] = byDay[di] || {}; byDay[di][name] = byDay[di][name] || [];
+        byDay[di][name].push({label:slot.label, s:toDec(slot.start), e:toDec(slot.end), h:slotHours(slot)});
       });
-      const warnings = [], weekTotal = {}, dayPersonHours = {}, coverage = [];
-      for (let di = 0; di < 7; di++) {
-        const people = byDay[di] || {}; dayPersonHours[di] = {};
-        Object.keys(people).forEach(name => {
-          const ivs = people[name];
-          const hrs = Math.round(ivs.reduce((a, b) => a + b.h, 0) * 100) / 100;
-          dayPersonHours[di][name] = hrs;
-          weekTotal[name] = Math.round(((weekTotal[name] || 0) + hrs) * 100) / 100;
-          if (hrs > settings.maxDay)
-            warnings.push({ type: 'day', di, name, msg: name + ' làm ' + hrs + 'h trong ' + DAYS[di] + ' (vượt ' + settings.maxDay + 'h/ngày)' });
-          const sorted = ivs.slice().sort((a, b) => a.s - b.s);
-          for (let i = 1; i < sorted.length; i++) if (sorted[i].s < sorted[i - 1].e)
-            warnings.push({ type: 'overlap', di, name, msg: name + ' trùng giờ ' + DAYS[di] + ': ca ' + sorted[i - 1].label + ' và ca ' + sorted[i].label + ' (chồng ' + fmtH(sorted[i].s) + '–' + fmtH(Math.min(sorted[i - 1].e, sorted[i].e)) + ')' });
-        });
-        const row = [];
-        for (let h = OPEN_H; h < CLOSE_H; h++) {
-          let c = 0; Object.keys(people).forEach(n => { if (people[n].some(iv => iv.s < h + 1 && iv.e > h)) c++; });
-          row.push(c);
-        }
-        coverage.push(row);
-        let gap = null;
-        for (let h = OPEN_H; h <= CLOSE_H; h++) {
-          const empty = h < CLOSE_H && row[h - OPEN_H] === 0;
-          if (empty && gap === null) gap = h;
-          if (!empty && gap !== null) { warnings.push({ type: 'gap', di, msg: DAYS[di] + ': không ai trực từ ' + fmtH(gap) + ' đến ' + fmtH(h) }); gap = null; }
-        }
-      }
-      Object.keys(weekTotal).forEach(name => {
-        if (weekTotal[name] > settings.maxWeek)
-          warnings.push({ type: 'week', name, msg: name + ' làm ' + weekTotal[name] + 'h/tuần (vượt ' + settings.maxWeek + 'h/tuần)' });
-      });
-      return { warnings, weekTotal, dayPersonHours, coverage };
+    });
+  });
+  const warnings=[], weekTotal={}, dayPersonHours={}, coverage=[];
+  for (let di=0; di<7; di++){
+    const people = byDay[di] || {}; dayPersonHours[di] = {};
+    Object.keys(people).forEach(name => {
+      const ivs = people[name];
+      const hrs = Math.round(ivs.reduce((a,b)=>a+b.h,0)*100)/100;
+      dayPersonHours[di][name] = hrs;
+      weekTotal[name] = Math.round(((weekTotal[name]||0)+hrs)*100)/100;
+      if (hrs > settings.maxDay)
+        warnings.push({type:'day',di,name,msg:name+' làm '+hrs+'h trong '+DAYS[di]+' (vượt '+settings.maxDay+'h/ngày)'});
+      const sorted = ivs.slice().sort((a,b)=>a.s-b.s);
+      for (let i=1;i<sorted.length;i++) if (sorted[i].s < sorted[i-1].e)
+        warnings.push({type:'overlap',di,name,msg:name+' trùng giờ '+DAYS[di]+': ca '+sorted[i-1].label+' và ca '+sorted[i].label+' (chồng '+fmtH(sorted[i].s)+'–'+fmtH(Math.min(sorted[i-1].e,sorted[i].e))+')'});
+    });
+    const row=[];
+    for (let h=OPEN_H; h<CLOSE_H; h++){
+      let c=0; Object.keys(people).forEach(n=>{ if (people[n].some(iv=>iv.s<h+1 && iv.e>h)) c++; });
+      row.push(c);
     }
-    function probationNotices(code) {
-      const out = [];
-      rosterOf(code).forEach(r => {
-        if (r.status !== 'TV' || !r.end) return;
-        const d = diffDays(r.end, todayYMD());
-        if (d < 0) out.push({ type: 'gap', msg: r.name + ' đã quá hạn thử việc ' + (-d) + ' ngày (hết hạn ' + fmtDM(r.end) + ') — cần quyết định chính thức/kết thúc' });
-        else if (d <= 7) out.push({ type: 'gap', msg: r.name + ' còn ' + d + ' ngày là hết thử việc (' + fmtDM(r.end) + ')' });
-      });
-      return out;
+    coverage.push(row);
+    let gap=null;
+    for (let h=OPEN_H; h<=CLOSE_H; h++){
+      const empty = h<CLOSE_H && row[h-OPEN_H]===0;
+      if (empty && gap===null) gap=h;
+      if (!empty && gap!==null){ warnings.push({type:'gap',di,msg:DAYS[di]+': không ai trực từ '+fmtH(gap)+' đến '+fmtH(h)}); gap=null; }
     }
+  }
+  Object.keys(weekTotal).forEach(name=>{ if (weekTotal[name] > settings.maxWeek)
+    warnings.push({type:'week',name,msg:name+' làm '+weekTotal[name]+'h/tuần (vượt '+settings.maxWeek+'h/tuần)'}); });
+  return {warnings, weekTotal, dayPersonHours, coverage};
+}
+function probationNotices(code){
+  const out=[];
+  rosterOf(code).forEach(r=>{
+    if (r.status!=='TV' || !r.end) return;
+    const d = diffDays(r.end, todayYMD());
+    if (d<0) out.push({type:'gap', msg:r.name+' đã quá hạn thử việc '+(-d)+' ngày (hết hạn '+fmtDM(r.end)+') — cần quyết định chính thức/kết thúc'});
+    else if (d<=7) out.push({type:'gap', msg:r.name+' còn '+d+' ngày là hết thử việc ('+fmtDM(r.end)+')'});
+  });
+  return out;
+}
 
-    /* ---------------- Nạp / ghi ---------------- */
-    async function loadWeek() {
-      state.loading = true; render();
-      try {
-        const p = state.session || {};
-        const r = await api('load', { week: state.week, pin: p.pin, role: p.role, scope: state.scope });
-        state.settings = r.settings; state.slots = r.slots;
-        state.stores = r.stores; state.regions = r.regions; state.weekData = r.week;
-        if (!state.curEntity || !pool()[state.curEntity]) state.curEntity = Object.keys(pool())[0];
-      } catch (e) { state.saveMsg = 'err:' + e.message; }
-      state.loading = false; render();
+/* ---------------- Nạp / ghi ---------------- */
+async function loadWeek(){
+  state.loading = true; render();
+  try{
+    const p = state.session || {};
+    const r = await api('load', {week: state.week, pin: p.pin, role: p.role, scope: state.scope});
+    state.settings = r.settings; state.slots = r.slots;
+    state.stores = r.stores; state.regions = r.regions; state.weekData = r.week;
+    if (!state.curEntity || !pool()[state.curEntity]) state.curEntity = Object.keys(pool())[0];
+  }catch(e){ state.saveMsg = 'err:'+e.message; }
+  state.loading = false; render();
+}
+async function mutate(action, payload, okMsg){
+  state.saveMsg = 'ok:Đang lưu…'; render();
+  try{
+    await api(action, Object.assign({pin: state.session.pin, scope: state.scope}, payload));
+    await loadWeek();
+    state.saveMsg = okMsg ? 'ok:'+okMsg : ''; render();
+    setTimeout(()=>{ state.saveMsg=''; render(); }, 2000);
+  }catch(e){ state.saveMsg = 'err:'+e.message; render(); }
+}
+
+/* ---------------- Hành động ---------------- */
+window.doLoginStore = async function(){
+  const code=$('lg-store').value, pin=$('lg-pin').value;
+  try{ await api('login',{role:'store',code,pin}); state.session={role:'store',entity:code,pin}; state.scope='store'; state.curEntity=code; await loadWeek(); }
+  catch(e){ alert(e.message); }
+};
+window.doLoginRegion = async function(){
+  const code=$('lg-region').value, pin=$('lg-rpin').value;
+  try{ await api('login',{role:'region',code,pin}); state.session={role:'region',entity:code,pin}; state.scope='region'; state.curEntity=code; await loadWeek(); }
+  catch(e){ alert(e.message); }
+};
+window.doLoginAdmin = async function(){
+  const pin=$('lg-apin').value;
+  try{ await api('login',{role:'admin',pin}); state.session={role:'admin',pin}; await loadWeek(); }
+  catch(e){ alert(e.message); }
+};
+window.doLogout = () => { state.session=null; state.tab='lich'; state.scope='store'; state.curEntity=null; render(); };
+window.setScopeMode = (sc) => { state.scope=sc; state.curEntity=null; state.tab= (state.tab==='cuahang')?'lich':state.tab; loadWeek(); };
+window.shiftWeek = (n) => { state.week = addDays(state.week, n*7); state.calOpen=false; loadWeek(); };
+window.pickWeek = (ds) => { state.week = mondayOf(ds); state.calOpen=false; loadWeek(); };
+window.toggleCal = () => { state.calOpen = !state.calOpen; state.calMonth = state.calOpen ? state.week.slice(0,7)+'-01' : null; render(); };
+window.calNav = (n) => { const d=parseYMD(state.calMonth); d.setMonth(d.getMonth()+n); state.calMonth=toYMD(d); render(); };
+window.calSet = (y,m) => { const d=parseYMD(state.calMonth); if(y!==null)d.setFullYear(+y); if(m!==null)d.setMonth(+m); state.calMonth=toYMD(new Date(d.getFullYear(), d.getMonth(), 1)); render(); };
+window.calToday = () => { state.week = mondayOf(todayYMD()); state.calOpen=false; loadWeek(); };
+window.setTab = (t) => { state.tab=t; render(); };
+window.setEntity = (c) => { state.curEntity=c; render(); };
+window.openCell = (slotId,di) => { state.editCell={slotId,di}; render(); };
+window.closeCell = () => { state.editCell=null; render(); };
+window.saveCell = () => {
+  const names = Array.from(document.querySelectorAll('.opt input:checked')).map(x=>x.value);
+  const {slotId,di} = state.editCell; state.editCell=null;
+  mutate('setCell', {week:state.week, entity:activeEntity(), slotId, di, names});
+};
+
+/* ============ v4/v5: NHẬP NHANH ============ */
+/* Mỗi phần tử trong ô có thể là chuỗi "Tên" (cửa hàng) hoặc {n:"Tên",h:"JMHCM01"} (QLV đi store nào).
+   Chuẩn hóa về {n,h} để xử lý thống nhất. */
+function asItem(x){ return (x && typeof x==='object') ? {n:x.n, h:x.h||''} : {n:x, h:''}; }
+function cellItems(slotId, di){ return (((entData().assign||{})[slotId]||{})[String(di)] || []).map(asItem); }
+function cellNames(slotId, di){ return cellItems(slotId, di).map(it=>it.n); }
+/* Chuyển mảng item -> dạng gửi server: cửa hàng gửi ["Tên"], QLV gửi [{n,h}] */
+function itemsToWire(items){
+  return items.map(it => it.h ? {n:it.n, h:it.h} : it.n);
+}
+/* Ghi ô, cập nhật giao diện ngay rồi mới gọi server (tránh cảm giác lag) */
+async function writeCell(slotId, di, items, msg){
+  const d = entData();
+  d.assign[slotId] = d.assign[slotId] || {};
+  const wire = itemsToWire(items);
+  if (items.length) d.assign[slotId][String(di)] = wire; else delete d.assign[slotId][String(di)];
+  render();
+  try{
+    // Với QLV mỗi ô chỉ 1 người + 1 store, nên storeHint là store của phần tử đầu
+    const storeHint = (state.scope==='region' && items[0]) ? (items[0].h||'') : '';
+    await api('setCell', {pin:state.session.pin, scope:state.scope, week:state.week, entity:activeEntity(), slotId, di, names:items.map(it=>it.n), storeHint});
+    if (msg){ state.saveMsg='ok:'+msg; render(); setTimeout(()=>{ state.saveMsg=''; render(); }, 1500); }
+  }catch(e){ state.saveMsg='err:'+e.message; render(); await loadWeek(); }
+}
+window.openRegionCell = (slotId, di, name) => { state.regionCell = {slotId, di, name}; render(); };
+window.closeRegionCell = () => { state.regionCell=null; render(); };
+window.saveRegionCell = () => {
+  const {slotId, di, name} = state.regionCell;
+  const hint = $('rc-store').value;
+  const cur = cellItems(slotId, di).filter(it=>it.n!==name); // 1 người 1 lần trong ô
+  cur.push({n:name, h:hint});
+  state.regionCell = null;
+  writeCell(slotId, di, cur);
+};
+window.setFillMode = (m) => { state.fillMode=m; state.qOpen=null; state.selCell=null; render(); };
+window.pickBrush = (n) => { state.brush = (state.brush===n) ? null : n; render(); };
+
+/* --- Chế độ tô: nhấn ô để thêm/bớt người đang cầm --- */
+window.paintCell = (slotId, di) => {
+  if (!state.brush) { state.saveMsg='err:Chọn một tên ở bảng trên trước, rồi nhấn vào ô.'; render(); return; }
+  if (state.brush === '__ERASE__') return writeCell(slotId, di, []);
+  // QLV: cần biết đi store nào -> mở popup chọn store thay vì tô thẳng
+  if (state.scope==='region'){ openRegionCell(slotId, di, state.brush); return; }
+  const cur = cellItems(slotId, di);
+  const k = cur.findIndex(it=>it.n===state.brush);
+  if (k >= 0) cur.splice(k, 1); else cur.push({n:state.brush, h:''});
+  writeCell(slotId, di, cur);
+};
+/* --- Kéo thả --- */
+window.dragStart = (e, n) => { e.dataTransfer.setData('text/plain', n); e.dataTransfer.effectAllowed='copy'; };
+window.dragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect='copy'; e.currentTarget.classList.add('dragover'); };
+window.dragLeave = (e) => { e.currentTarget.classList.remove('dragover'); };
+window.dropCell = (e, slotId, di) => {
+  e.preventDefault(); e.currentTarget.classList.remove('dragover');
+  const n = e.dataTransfer.getData('text/plain');
+  if (!n) return;
+  if (state.scope==='region'){ openRegionCell(slotId, di, n); return; }
+  const cur = cellItems(slotId, di);
+  if (!cur.some(it=>it.n===n)) { cur.push({n, h:''}); writeCell(slotId, di, cur); }
+};
+/* --- Xóa 1 người khỏi ô bằng dấu × --- */
+window.delName = (e, slotId, di, n) => {
+  e.stopPropagation();
+  writeCell(slotId, di, cellItems(slotId, di).filter(it=>it.n!==n));
+};
+/* --- Chọn ô để copy/paste --- */
+window.selectCell = (e, slotId, di) => {
+  if (e.target.closest('.x')) return;
+  state.selCell = {slotId, di}; render();
+};
+/* --- Chế độ gõ nhanh --- */
+window.openQ = (slotId, di) => {
+  if (state.qOpen && state.qOpen.slotId===slotId && state.qOpen.di===di) return;
+  state.qOpen = {slotId, di}; state.qSug = -1; render();
+  setTimeout(()=>{ const el=$('q-input'); if(el){ el.focus(); el.select(); } }, 0);
+};
+function qMatches(txt){
+  const last = txt.split(',').pop().trim().toLowerCase();
+  const names = qNamePool();
+  if (!last) return names.slice(0, 8);
+  const norm = (x)=>x.toLowerCase();
+  return names.filter(n => norm(n).includes(last)).slice(0, 8);
+}
+function qNamePool(){
+  const slot = curSlots().find(s=>s.id===(state.qOpen||{}).slotId);
+  const roster = rosterOf(activeEntity()).map(r=>r.name);
+  return (state.scope==='store' && slot && slot.role===MGR) ? [MGR].concat(roster) : roster;
+}
+window.qInputChanged = () => { state.qSug = -1; renderSugg(); };
+function renderSugg(){
+  const box = $('q-sugg'), el = $('q-input');
+  if (!box || !el) return;
+  const m = qMatches(el.value);
+  box.innerHTML = m.length ? m.map((n,i)=>`<div class="${i===state.qSug?'act':''}" onmousedown="qPick(event,'${esc(n)}')">${esc(n)}</div>`).join('')
+    : '<div class="mut" style="cursor:default">Không khớp tên nào — kiểm tra tab Nhân sự</div>';
+  box.style.display = '';
+}
+window.qPick = (e, n) => {
+  e.preventDefault();
+  const el = $('q-input');
+  const parts = el.value.split(',');
+  parts[parts.length-1] = ' ' + n;
+  el.value = parts.join(',').replace(/^\s+/,'') + ', ';
+  state.qSug = -1; renderSugg(); el.focus();
+};
+window.qKey = (e) => {
+  const el = $('q-input');
+  const m = qMatches(el.value);
+  if (e.key === 'ArrowDown'){ e.preventDefault(); state.qSug = Math.min(state.qSug+1, m.length-1); renderSugg(); return; }
+  if (e.key === 'ArrowUp'){ e.preventDefault(); state.qSug = Math.max(state.qSug-1, -1); renderSugg(); return; }
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    if (state.qSug >= 0 && m[state.qSug]) return qPick(e, m[state.qSug]);
+    return qCommit(true);
+  }
+  if (e.key === 'Escape'){ e.preventDefault(); state.qOpen=null; render(); return; }
+  if (e.key === 'Tab'){ e.preventDefault(); qCommit(true, e.shiftKey?-1:1); return; }
+};
+window.qCommit = (moveNext, dir) => {
+  const el = $('q-input');
+  if (!el || !state.qOpen) return;
+  const {slotId, di} = state.qOpen;
+  const pool = qNamePool();
+  const raw = el.value.split(',').map(x=>x.trim()).filter(Boolean);
+  const names = [], bad = [];
+  raw.forEach(t => {
+    const hit = pool.find(n => n.toLowerCase() === t.toLowerCase())
+             || pool.find(n => n.toLowerCase().startsWith(t.toLowerCase()));
+    if (hit){ if (!names.includes(hit)) names.push(hit); } else bad.push(t);
+  });
+  if (bad.length){
+    state.saveMsg = 'err:Không có nhân sự tên "'+bad.join(', ')+'" — thêm ở tab Nhân sự trước';
+    el.classList.add('bad'); render(); return;
+  }
+  const curNames = cellNames(slotId, di);
+  const changed = curNames.length!==names.length || curNames.some((x,i)=>x!==names[i]);
+  // giữ store_hint cũ nếu tên trùng (QLV), tên mới thì h rỗng
+  const prev = cellItems(slotId, di);
+  const items = names.map(n => { const old = prev.find(it=>it.n===n); return {n, h: old?old.h:''}; });
+  state.qOpen = null;
+  if (moveNext){
+    const slots = curSlots();
+    const si = slots.findIndex(s=>s.id===slotId);
+    const step = dir || 1;
+    let ndi = di + step, nsi = si;
+    if (ndi > 6){ ndi = 0; nsi = si+1; } if (ndi < 0){ ndi = 6; nsi = si-1; }
+    if (slots[nsi]) state.qOpen = {slotId: slots[nsi].id, di: ndi};
+  }
+  if (changed) writeCell(slotId, di, items); else render();
+  if (state.qOpen) setTimeout(()=>{ const n=$('q-input'); if(n){ n.focus(); n.select(); } }, 0);
+};
+/* --- Điền cả hàng (1 ca × 7 ngày) --- */
+window.fillRow = (slotId) => {
+  if (!state.brush || state.brush==='__ERASE__') { state.saveMsg='err:Chọn một tên ở bảng trên trước.'; render(); return; }
+  const n = state.brush;
+  if (!confirm('Thêm '+n+' vào ca này cho cả 7 ngày?')) return;
+  return (async () => {
+    /* Tính trước 7 ô cần ghi, rồi ghi tuần tự — tránh đọc lại state giữa chừng */
+    const todo = [];
+    for (let di=0; di<7; di++){
+      const cur = cellItems(slotId, di);
+      if (!cur.some(it=>it.n===n)){ cur.push({n, h:''}); todo.push({di, items:cur}); }
     }
-    async function mutate(action, payload, okMsg) {
-      state.saveMsg = 'ok:Đang lưu…'; render();
-      try {
-        await api(action, Object.assign({ pin: state.session.pin, scope: state.scope }, payload));
-        await loadWeek();
-        state.saveMsg = okMsg ? 'ok:' + okMsg : ''; render();
-        setTimeout(() => { state.saveMsg = ''; render(); }, 2000);
-      } catch (e) { state.saveMsg = 'err:' + e.message; render(); }
-    }
+    if (!todo.length){ state.saveMsg='ok:'+n+' đã có đủ cả tuần ở ca này'; render(); setTimeout(()=>{ state.saveMsg=''; render(); },1500); return; }
+    state.saveMsg='ok:Đang điền '+n+' cả tuần…'; render();
+    for (const t of todo) await writeCell(slotId, t.di, t.items);
+    state.saveMsg='ok:Đã điền '+n+' vào '+todo.length+' ngày'; render();
+    setTimeout(()=>{ state.saveMsg=''; render(); }, 1500);
+  })();
+};
+/* --- Copy / Paste --- */
+window.copyCell = () => {
+  if (!state.selCell) return;
+  const items = cellItems(state.selCell.slotId, state.selCell.di);
+  state.clip = {items};
+  state.saveMsg = 'ok:Đã copy: ' + (items.map(it=>it.n+(it.h?(' @'+it.h):'')).join(', ') || '(ô trống)');
+  render(); setTimeout(()=>{ state.saveMsg=''; render(); }, 1500);
+};
+window.pasteCell = () => {
+  if (!state.selCell || !state.clip) return;
+  writeCell(state.selCell.slotId, state.selCell.di, state.clip.items.map(it=>({n:it.n,h:it.h})), 'Đã dán');
+};
+window.clearCell = () => {
+  if (!state.selCell) return;
+  writeCell(state.selCell.slotId, state.selCell.di, [], 'Đã xóa ô');
+};
 
-    /* ---------------- Hành động ---------------- */
-    window.doLoginStore = async function () {
-      const code = $('lg-store').value, pin = $('lg-pin').value;
-      try { await api('login', { role: 'store', code, pin }); state.session = { role: 'store', entity: code, pin }; state.scope = 'store'; state.curEntity = code; await loadWeek(); }
-      catch (e) { alert(e.message); }
-    };
-    window.doLoginRegion = async function () {
-      const code = $('lg-region').value, pin = $('lg-rpin').value;
-      try { await api('login', { role: 'region', code, pin }); state.session = { role: 'region', entity: code, pin }; state.scope = 'region'; state.curEntity = code; await loadWeek(); }
-      catch (e) { alert(e.message); }
-    };
-    window.doLoginAdmin = async function () {
-      const pin = $('lg-apin').value;
-      try { await api('login', { role: 'admin', pin }); state.session = { role: 'admin', pin }; await loadWeek(); }
-      catch (e) { alert(e.message); }
-    };
-    window.doLogout = () => { state.session = null; state.tab = 'lich'; state.scope = 'store'; state.curEntity = null; render(); };
-    window.setScopeMode = (sc) => { state.scope = sc; state.curEntity = null; state.tab = (state.tab === 'cuahang') ? 'lich' : state.tab; loadWeek(); };
-    window.shiftWeek = (n) => { state.week = addDays(state.week, n * 7); state.calOpen = false; loadWeek(); };
-    window.pickWeek = (ds) => { state.week = mondayOf(ds); state.calOpen = false; loadWeek(); };
-    window.toggleCal = () => { state.calOpen = !state.calOpen; state.calMonth = state.calOpen ? state.week.slice(0, 7) + '-01' : null; render(); };
-    window.calNav = (n) => { const d = parseYMD(state.calMonth); d.setMonth(d.getMonth() + n); state.calMonth = toYMD(d); render(); };
-    window.calSet = (y, m) => { const d = parseYMD(state.calMonth); if (y !== null) d.setFullYear(+y); if (m !== null) d.setMonth(+m); state.calMonth = toYMD(new Date(d.getFullYear(), d.getMonth(), 1)); render(); };
-    window.calToday = () => { state.week = mondayOf(todayYMD()); state.calOpen = false; loadWeek(); };
-    window.setTab = (t) => { state.tab = t; render(); };
-    window.setEntity = (c) => { state.curEntity = c; render(); };
-    window.openCell = (slotId, di) => { state.editCell = { slotId, di }; render(); };
-    window.closeCell = () => { state.editCell = null; render(); };
-    window.saveCell = () => {
-      const names = Array.from(document.querySelectorAll('.opt input:checked')).map(x => x.value);
-      const { slotId, di } = state.editCell; state.editCell = null;
-      mutate('setCell', { week: state.week, entity: activeEntity(), slotId, di, names });
-    };
+window.doToggleLock = (code) => {
+  const locked = !((state.weekData[state.scope]||{})[code]||{}).locked;
+  mutate('setLock', {week:state.week, entity:code, locked}, locked?'Đã khóa '+code:'Đã mở '+code);
+};
+window.doLockAll = (v) => mutate('lockAll', {week:state.week, locked:v}, v?'Đã khóa tất cả':'Đã mở tất cả');
+window.doCopyPrev = async () => {
+  try{
+    const r = await api('load', {week: addDays(state.week,-7), pin:state.session.pin, role:state.session.role, scope:state.scope});
+    const prev = (r.week[state.scope]||{})[activeEntity()];
+    if (!prev || !Object.keys(prev.assign||{}).length) return alert('Không có dữ liệu tuần trước để sao chép.');
+    state.saveMsg='ok:Đang sao chép…'; render();
+    for (const sid of Object.keys(prev.assign))
+      for (const di of Object.keys(prev.assign[sid]))
+        await api('setCell', {pin:state.session.pin, scope:state.scope, week:state.week, entity:activeEntity(), slotId:sid, di:+di, names:prev.assign[sid][di]});
+    await loadWeek(); state.saveMsg='ok:Đã sao chép tuần trước'; render();
+  }catch(e){ alert(e.message); }
+};
+window.doAddEmp = () => {
+  const name=$('emp-name').value.trim();
+  if(!name) return alert('Nhập tên nhân viên.');
+  if (rosterOf(activeEntity()).some(r=>r.name===name)) return alert('Tên này đã có — dùng tên khác để phân biệt.');
+  const status=$('emp-status').value;
+  const start = status==='TV' ? $('emp-start').value : '';
+  const end = status==='TV' ? $('emp-end').value : '';
+  if (status==='TV' && (!start||!end)) return alert('Nhân viên thử việc cần ngày bắt đầu và hết hạn.');
+  mutate('saveEmployee', {entity:activeEntity(), emp:{name,status,start,end}}, 'Đã thêm '+name);
+};
+window.doUpdEmp = (name) => {
+  const row = document.querySelector('[data-emp="'+CSS.escape(name)+'"]');
+  const status = row.querySelector('.f-status').value;
+  const start = row.querySelector('.f-start').value, end = row.querySelector('.f-end').value;
+  if (status==='TV' && !end) return alert('Nhân viên thử việc cần ngày hết hạn.');
+  mutate('saveEmployee', {entity:activeEntity(), emp:{name,status,start:status==='TV'?start:'',end:status==='TV'?end:''}}, 'Đã cập nhật '+name);
+};
+window.doDelEmp = (name) => {
+  if(!confirm('Xóa '+name+' khỏi danh sách? (Ca đã xếp không bị xóa)')) return;
+  mutate('removeEmployee', {entity:activeEntity(), name}, 'Đã xóa '+name);
+};
+window.toggleTVFields = () => {
+  const tv = $('emp-status').value==='TV';
+  $('emp-start').style.display = tv?'':'none'; $('emp-end').style.display = tv?'':'none';
+};
+/* --- Ca làm việc --- */
+window.openSlot = (id) => {
+  state.editSlot = id==='new' ? {id:'', label:'', start:'09:00', end:'13:00', role: state.scope==='region'?'Quản lý vùng':'Bán hàng'}
+    : Object.assign({}, curSlots().find(s=>s.id===id));
+  render();
+};
+window.closeSlot = () => { state.editSlot=null; render(); };
+window.saveSlotForm = () => {
+  const slot = {
+    id: state.editSlot.id,
+    label: $('sl-label').value.trim(),
+    start: $('sl-start').value, end: $('sl-end').value,
+    role: $('sl-role').value.trim() || 'Bán hàng'
+  };
+  if (!slot.label) return alert('Nhập tên ca (VD: 9h – 13h).');
+  if (toDec(slot.start) >= toDec(slot.end)) return alert('Giờ kết thúc phải sau giờ bắt đầu.');
+  state.editSlot = null;
+  mutate('saveSlot', {slot, scope:state.scope}, 'Đã lưu ca '+slot.label);
+};
+window.doDelSlot = (id, label) => {
+  if(!confirm('Xóa ca "'+label+'"? Ca sẽ ẩn khỏi lịch mới; dữ liệu lịch cũ vẫn giữ.')) return;
+  mutate('removeSlot', {slotId:id, scope:state.scope}, 'Đã xóa ca '+label);
+};
+/* --- Cửa hàng / khu vực --- */
+window.doAddStore = () => {
+  const code=$('st-code').value.trim().toUpperCase();
+  if(!code) return alert('Nhập mã cửa hàng (VD: JMHNI05).');
+  mutate('saveStore', {store:{code, name:$('st-name').value.trim()||code, region:$('st-region').value, pin:$('st-pin').value.trim()||'1111'}}, 'Đã thêm cửa hàng '+code);
+};
+window.doUpdStore = (code) => {
+  const row = document.querySelector('[data-store="'+CSS.escape(code)+'"]');
+  mutate('saveStore', {store:{code, name:row.querySelector('.f-name').value.trim()||code,
+    region:row.querySelector('.f-region').value, pin:row.querySelector('.f-pin').value.trim()||undefined}}, 'Đã lưu '+code);
+};
+window.doDelStore = (code) => {
+  if(!confirm('Ngừng hoạt động cửa hàng '+code+'? Cửa hàng sẽ ẩn khỏi app; dữ liệu lịch cũ vẫn giữ trong Sheet.')) return;
+  mutate('removeStore', {code}, 'Đã ẩn '+code);
+};
+window.doAddRegion = () => {
+  const code=$('rg-code').value.trim().toUpperCase();
+  if(!code) return alert('Nhập mã khu vực (VD: KVMT).');
+  mutate('saveRegion', {region:{code, name:$('rg-name').value.trim()||code, pin:$('rg-pin').value.trim()||'2222'}}, 'Đã thêm khu vực '+code);
+};
+window.doUpdRegion = (code) => {
+  const row = document.querySelector('[data-region="'+CSS.escape(code)+'"]');
+  mutate('saveRegion', {region:{code, name:row.querySelector('.f-name').value.trim()||code, pin:row.querySelector('.f-pin').value.trim()||undefined}}, 'Đã lưu '+code);
+};
+window.doSaveSettings = () => {
+  const patch = {maxDay:+$('set-maxday').value||8, maxWeek:+$('set-maxweek').value||48};
+  const ap=$('set-apin').value; if(ap) patch.adminPin=ap;
+  mutate('setSettings', {patch}, 'Đã lưu cài đặt');
+};
+window.setReportScope = (v) => { state.reportScope=v; render(); };
 
-    /* ============ v4: NHẬP NHANH ============ */
-    /* Khóa ngày luôn là chuỗi: JSON biến key số thành chuỗi, nếu trộn 0 và "0" sẽ đọc hụt */
-    function cellNames(slotId, di) { return ((entData().assign || {})[slotId] || {})[String(di)] || []; }
-    /* Ghi ô, cập nhật giao diện ngay rồi mới gọi server (tránh cảm giác lag) */
-    async function writeCell(slotId, di, names, msg) {
-      const d = entData();
-      d.assign[slotId] = d.assign[slotId] || {};
-      if (names.length) d.assign[slotId][String(di)] = names; else delete d.assign[slotId][String(di)];
-      render();
-      try {
-        await api('setCell', { pin: state.session.pin, scope: state.scope, week: state.week, entity: activeEntity(), slotId, di, names });
-        if (msg) { state.saveMsg = 'ok:' + msg; render(); setTimeout(() => { state.saveMsg = ''; render(); }, 1500); }
-      } catch (e) { state.saveMsg = 'err:' + e.message; render(); await loadWeek(); }
-    }
-    window.setFillMode = (m) => { state.fillMode = m; state.qOpen = null; state.selCell = null; render(); };
-    window.pickBrush = (n) => { state.brush = (state.brush === n) ? null : n; render(); };
+/* ---------------- Render ---------------- */
+function render(){
+  const el = $('app');
+  if (!state.session){ el.innerHTML = viewLogin(); return; }
+  const codes = Object.keys(pool());
+  const sw = entData();
+  const slots = curSlots();
+  const a = analyze(sw.assign, slots, state.settings);
+  const allA = {}; codes.forEach(c => allA[c] = analyze(((state.weekData[state.scope]||{})[c]||{}).assign||{}, slots, state.settings));
+  const locked = !!sw.locked;
+  const canEdit = state.session.role==='admin' || !locked;
+  const probCount = probationNotices(activeEntity()).length;
+  const [mk,mtxt] = state.saveMsg.includes(':') ? [state.saveMsg.split(':')[0], state.saveMsg.slice(state.saveMsg.indexOf(':')+1)] : ['',''];
 
-    /* --- Chế độ tô: nhấn ô để thêm/bớt người đang cầm --- */
-    window.paintCell = (slotId, di) => {
-      if (!state.brush) { state.saveMsg = 'err:Chọn một tên ở bảng trên trước, rồi nhấn vào ô.'; render(); return; }
-      const cur = cellNames(slotId, di).slice();
-      if (state.brush === '__ERASE__') return writeCell(slotId, di, []);
-      const k = cur.indexOf(state.brush);
-      if (k >= 0) cur.splice(k, 1); else cur.push(state.brush);
-      writeCell(slotId, di, cur);
-    };
-    /* --- Kéo thả --- */
-    window.dragStart = (e, n) => { e.dataTransfer.setData('text/plain', n); e.dataTransfer.effectAllowed = 'copy'; };
-    window.dragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; e.currentTarget.classList.add('dragover'); };
-    window.dragLeave = (e) => { e.currentTarget.classList.remove('dragover'); };
-    window.dropCell = (e, slotId, di) => {
-      e.preventDefault(); e.currentTarget.classList.remove('dragover');
-      const n = e.dataTransfer.getData('text/plain');
-      if (!n) return;
-      const cur = cellNames(slotId, di).slice();
-      if (!cur.includes(n)) { cur.push(n); writeCell(slotId, di, cur); }
-    };
-    /* --- Xóa 1 người khỏi ô bằng dấu × --- */
-    window.delName = (e, slotId, di, n) => {
-      e.stopPropagation();
-      writeCell(slotId, di, cellNames(slotId, di).filter(x => x !== n));
-    };
-    /* --- Chọn ô để copy/paste --- */
-    window.selectCell = (e, slotId, di) => {
-      if (e.target.closest('.x')) return;
-      state.selCell = { slotId, di }; render();
-    };
-    /* --- Chế độ gõ nhanh --- */
-    window.openQ = (slotId, di) => {
-      if (state.qOpen && state.qOpen.slotId === slotId && state.qOpen.di === di) return;
-      state.qOpen = { slotId, di }; state.qSug = -1; render();
-      setTimeout(() => { const el = $('q-input'); if (el) { el.focus(); el.select(); } }, 0);
-    };
-    function qMatches(txt) {
-      const last = txt.split(',').pop().trim().toLowerCase();
-      const names = qNamePool();
-      if (!last) return names.slice(0, 8);
-      const norm = (x) => x.toLowerCase();
-      return names.filter(n => norm(n).includes(last)).slice(0, 8);
-    }
-    function qNamePool() {
-      const slot = curSlots().find(s => s.id === (state.qOpen || {}).slotId);
-      const roster = rosterOf(activeEntity()).map(r => r.name);
-      return (state.scope === 'store' && slot && slot.role === MGR) ? [MGR].concat(roster) : roster;
-    }
-    window.qInputChanged = () => { state.qSug = -1; renderSugg(); };
-    function renderSugg() {
-      const box = $('q-sugg'), el = $('q-input');
-      if (!box || !el) return;
-      const m = qMatches(el.value);
-      box.innerHTML = m.length ? m.map((n, i) => `<div class="${i === state.qSug ? 'act' : ''}" onmousedown="qPick(event,'${esc(n)}')">${esc(n)}</div>`).join('')
-        : '<div class="mut" style="cursor:default">Không khớp tên nào — kiểm tra tab Nhân sự</div>';
-      box.style.display = '';
-    }
-    window.qPick = (e, n) => {
-      e.preventDefault();
-      const el = $('q-input');
-      const parts = el.value.split(',');
-      parts[parts.length - 1] = ' ' + n;
-      el.value = parts.join(',').replace(/^\s+/, '') + ', ';
-      state.qSug = -1; renderSugg(); el.focus();
-    };
-    window.qKey = (e) => {
-      const el = $('q-input');
-      const m = qMatches(el.value);
-      if (e.key === 'ArrowDown') { e.preventDefault(); state.qSug = Math.min(state.qSug + 1, m.length - 1); renderSugg(); return; }
-      if (e.key === 'ArrowUp') { e.preventDefault(); state.qSug = Math.max(state.qSug - 1, -1); renderSugg(); return; }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (state.qSug >= 0 && m[state.qSug]) return qPick(e, m[state.qSug]);
-        return qCommit(true);
-      }
-      if (e.key === 'Escape') { e.preventDefault(); state.qOpen = null; render(); return; }
-      if (e.key === 'Tab') { e.preventDefault(); qCommit(true, e.shiftKey ? -1 : 1); return; }
-    };
-    window.qCommit = (moveNext, dir) => {
-      const el = $('q-input');
-      if (!el || !state.qOpen) return;
-      const { slotId, di } = state.qOpen;
-      const pool = qNamePool();
-      const raw = el.value.split(',').map(x => x.trim()).filter(Boolean);
-      const names = [], bad = [];
-      raw.forEach(t => {
-        const hit = pool.find(n => n.toLowerCase() === t.toLowerCase())
-          || pool.find(n => n.toLowerCase().startsWith(t.toLowerCase()));
-        if (hit) { if (!names.includes(hit)) names.push(hit); } else bad.push(t);
-      });
-      if (bad.length) {
-        state.saveMsg = 'err:Không có nhân sự tên "' + bad.join(', ') + '" — thêm ở tab Nhân sự trước';
-        el.classList.add('bad'); render(); return;
-      }
-      const cur = cellNames(slotId, di);
-      const changed = cur.length !== names.length || cur.some((x, i) => x !== names[i]);
-      state.qOpen = null;
-      if (moveNext) {
-        const slots = curSlots();
-        const si = slots.findIndex(s => s.id === slotId);
-        const step = dir || 1;
-        let ndi = di + step, nsi = si;
-        if (ndi > 6) { ndi = 0; nsi = si + 1; } if (ndi < 0) { ndi = 6; nsi = si - 1; }
-        if (slots[nsi]) state.qOpen = { slotId: slots[nsi].id, di: ndi };
-      }
-      if (changed) writeCell(slotId, di, names); else render();
-      if (state.qOpen) setTimeout(() => { const n = $('q-input'); if (n) { n.focus(); n.select(); } }, 0);
-    };
-    /* --- Điền cả hàng (1 ca × 7 ngày) --- */
-    window.fillRow = (slotId) => {
-      if (!state.brush || state.brush === '__ERASE__') { state.saveMsg = 'err:Chọn một tên ở bảng trên trước.'; render(); return; }
-      const n = state.brush;
-      if (!confirm('Thêm ' + n + ' vào ca này cho cả 7 ngày?')) return;
-      return (async () => {
-        /* Tính trước 7 ô cần ghi, rồi ghi tuần tự — tránh đọc lại state giữa chừng */
-        const todo = [];
-        for (let di = 0; di < 7; di++) {
-          const cur = cellNames(slotId, di).slice();
-          if (!cur.includes(n)) { cur.push(n); todo.push({ di, names: cur }); }
-        }
-        if (!todo.length) { state.saveMsg = 'ok:' + n + ' đã có đủ cả tuần ở ca này'; render(); setTimeout(() => { state.saveMsg = ''; render(); }, 1500); return; }
-        state.saveMsg = 'ok:Đang điền ' + n + ' cả tuần…'; render();
-        for (const t of todo) await writeCell(slotId, t.di, t.names);
-        state.saveMsg = 'ok:Đã điền ' + n + ' vào ' + todo.length + ' ngày'; render();
-        setTimeout(() => { state.saveMsg = ''; render(); }, 1500);
-      })();
-    };
-    /* --- Copy / Paste --- */
-    window.copyCell = () => {
-      if (!state.selCell) return;
-      state.clip = { names: cellNames(state.selCell.slotId, state.selCell.di).slice() };
-      state.saveMsg = 'ok:Đã copy: ' + (state.clip.names.join(', ') || '(ô trống)');
-      render(); setTimeout(() => { state.saveMsg = ''; render(); }, 1500);
-    };
-    window.pasteCell = () => {
-      if (!state.selCell || !state.clip) return;
-      writeCell(state.selCell.slotId, state.selCell.di, state.clip.names.slice(), 'Đã dán');
-    };
-    window.clearCell = () => {
-      if (!state.selCell) return;
-      writeCell(state.selCell.slotId, state.selCell.di, [], 'Đã xóa ô');
-    };
+  let body='';
+  if (state.tab==='lich') body = viewGrid(sw, a, slots, canEdit, locked);
+  if (state.tab==='nhansu') body = viewStaff(a);
+  if (state.tab==='kiemsoat') body = viewControl(codes, allA);
+  if (state.tab==='baocao') body = viewReport(codes, allA);
+  if (state.tab==='cuahang') body = viewEntities();
+  if (state.tab==='calam') body = viewSlots(slots);
+  if (state.tab==='quantri') body = viewAdmin(codes);
 
-    window.doToggleLock = (code) => {
-      const locked = !((state.weekData[state.scope] || {})[code] || {}).locked;
-      mutate('setLock', { week: state.week, entity: code, locked }, locked ? 'Đã khóa ' + code : 'Đã mở ' + code);
-    };
-    window.doLockAll = (v) => mutate('lockAll', { week: state.week, locked: v }, v ? 'Đã khóa tất cả' : 'Đã mở tất cả');
-    window.doCopyPrev = async () => {
-      try {
-        const r = await api('load', { week: addDays(state.week, -7), pin: state.session.pin, role: state.session.role, scope: state.scope });
-        const prev = (r.week[state.scope] || {})[activeEntity()];
-        if (!prev || !Object.keys(prev.assign || {}).length) return alert('Không có dữ liệu tuần trước để sao chép.');
-        state.saveMsg = 'ok:Đang sao chép…'; render();
-        for (const sid of Object.keys(prev.assign))
-          for (const di of Object.keys(prev.assign[sid]))
-            await api('setCell', { pin: state.session.pin, scope: state.scope, week: state.week, entity: activeEntity(), slotId: sid, di: +di, names: prev.assign[sid][di] });
-        await loadWeek(); state.saveMsg = 'ok:Đã sao chép tuần trước'; render();
-      } catch (e) { alert(e.message); }
-    };
-    window.doAddEmp = () => {
-      const name = $('emp-name').value.trim();
-      if (!name) return alert('Nhập tên nhân viên.');
-      if (rosterOf(activeEntity()).some(r => r.name === name)) return alert('Tên này đã có — dùng tên khác để phân biệt.');
-      const status = $('emp-status').value;
-      const start = status === 'TV' ? $('emp-start').value : '';
-      const end = status === 'TV' ? $('emp-end').value : '';
-      if (status === 'TV' && (!start || !end)) return alert('Nhân viên thử việc cần ngày bắt đầu và hết hạn.');
-      mutate('saveEmployee', { entity: activeEntity(), emp: { name, status, start, end } }, 'Đã thêm ' + name);
-    };
-    window.doUpdEmp = (name) => {
-      const row = document.querySelector('[data-emp="' + CSS.escape(name) + '"]');
-      const status = row.querySelector('.f-status').value;
-      const start = row.querySelector('.f-start').value, end = row.querySelector('.f-end').value;
-      if (status === 'TV' && !end) return alert('Nhân viên thử việc cần ngày hết hạn.');
-      mutate('saveEmployee', { entity: activeEntity(), emp: { name, status, start: status === 'TV' ? start : '', end: status === 'TV' ? end : '' } }, 'Đã cập nhật ' + name);
-    };
-    window.doDelEmp = (name) => {
-      if (!confirm('Xóa ' + name + ' khỏi danh sách? (Ca đã xếp không bị xóa)')) return;
-      mutate('removeEmployee', { entity: activeEntity(), name }, 'Đã xóa ' + name);
-    };
-    window.toggleTVFields = () => {
-      const tv = $('emp-status').value === 'TV';
-      $('emp-start').style.display = tv ? '' : 'none'; $('emp-end').style.display = tv ? '' : 'none';
-    };
-    /* --- Ca làm việc --- */
-    window.openSlot = (id) => {
-      state.editSlot = id === 'new' ? { id: '', label: '', start: '09:00', end: '13:00', role: state.scope === 'region' ? 'Quản lý vùng' : 'Bán hàng' }
-        : Object.assign({}, curSlots().find(s => s.id === id));
-      render();
-    };
-    window.closeSlot = () => { state.editSlot = null; render(); };
-    window.saveSlotForm = () => {
-      const slot = {
-        id: state.editSlot.id,
-        label: $('sl-label').value.trim(),
-        start: $('sl-start').value, end: $('sl-end').value,
-        role: $('sl-role').value.trim() || 'Bán hàng'
-      };
-      if (!slot.label) return alert('Nhập tên ca (VD: 9h – 13h).');
-      if (toDec(slot.start) >= toDec(slot.end)) return alert('Giờ kết thúc phải sau giờ bắt đầu.');
-      state.editSlot = null;
-      mutate('saveSlot', { slot, scope: state.scope }, 'Đã lưu ca ' + slot.label);
-    };
-    window.doDelSlot = (id, label) => {
-      if (!confirm('Xóa ca "' + label + '"? Ca sẽ ẩn khỏi lịch mới; dữ liệu lịch cũ vẫn giữ.')) return;
-      mutate('removeSlot', { slotId: id, scope: state.scope }, 'Đã xóa ca ' + label);
-    };
-    /* --- Cửa hàng / khu vực --- */
-    window.doAddStore = () => {
-      const code = $('st-code').value.trim().toUpperCase();
-      if (!code) return alert('Nhập mã cửa hàng (VD: JMHNI05).');
-      mutate('saveStore', { store: { code, name: $('st-name').value.trim() || code, region: $('st-region').value, pin: $('st-pin').value.trim() || '1111' } }, 'Đã thêm cửa hàng ' + code);
-    };
-    window.doUpdStore = (code) => {
-      const row = document.querySelector('[data-store="' + CSS.escape(code) + '"]');
-      mutate('saveStore', {
-        store: {
-          code, name: row.querySelector('.f-name').value.trim() || code,
-          region: row.querySelector('.f-region').value, pin: row.querySelector('.f-pin').value.trim() || undefined
-        }
-      }, 'Đã lưu ' + code);
-    };
-    window.doDelStore = (code) => {
-      if (!confirm('Ngừng hoạt động cửa hàng ' + code + '? Cửa hàng sẽ ẩn khỏi app; dữ liệu lịch cũ vẫn giữ trong Sheet.')) return;
-      mutate('removeStore', { code }, 'Đã ẩn ' + code);
-    };
-    window.doAddRegion = () => {
-      const code = $('rg-code').value.trim().toUpperCase();
-      if (!code) return alert('Nhập mã khu vực (VD: KVMT).');
-      mutate('saveRegion', { region: { code, name: $('rg-name').value.trim() || code, pin: $('rg-pin').value.trim() || '2222' } }, 'Đã thêm khu vực ' + code);
-    };
-    window.doUpdRegion = (code) => {
-      const row = document.querySelector('[data-region="' + CSS.escape(code) + '"]');
-      mutate('saveRegion', { region: { code, name: row.querySelector('.f-name').value.trim() || code, pin: row.querySelector('.f-pin').value.trim() || undefined } }, 'Đã lưu ' + code);
-    };
-    window.doSaveSettings = () => {
-      const patch = { maxDay: +$('set-maxday').value || 8, maxWeek: +$('set-maxweek').value || 48 };
-      const ap = $('set-apin').value; if (ap) patch.adminPin = ap;
-      mutate('setSettings', { patch }, 'Đã lưu cài đặt');
-    };
-    window.setReportScope = (v) => { state.reportScope = v; render(); };
+  const isAdmin = state.session.role==='admin';
+  const roleTxt = isAdmin ? 'Quản trị hệ thống' : (state.session.role==='region' ? 'Quản lý vùng '+esc(state.session.entity) : 'Cửa hàng '+esc(state.session.entity));
 
-    /* ---------------- Render ---------------- */
-    function render() {
-      const el = $('app');
-      if (!state.session) { el.innerHTML = viewLogin(); return; }
-      const codes = Object.keys(pool());
-      const sw = entData();
-      const slots = curSlots();
-      const a = analyze(sw.assign, slots, state.settings);
-      const allA = {}; codes.forEach(c => allA[c] = analyze(((state.weekData[state.scope] || {})[c] || {}).assign || {}, slots, state.settings));
-      const locked = !!sw.locked;
-      const canEdit = state.session.role === 'admin' || !locked;
-      const probCount = probationNotices(activeEntity()).length;
-      const [mk, mtxt] = state.saveMsg.includes(':') ? [state.saveMsg.split(':')[0], state.saveMsg.slice(state.saveMsg.indexOf(':') + 1)] : ['', ''];
-
-      let body = '';
-      if (state.tab === 'lich') body = viewGrid(sw, a, slots, canEdit, locked);
-      if (state.tab === 'nhansu') body = viewStaff(a);
-      if (state.tab === 'kiemsoat') body = viewControl(codes, allA);
-      if (state.tab === 'baocao') body = viewReport(codes, allA);
-      if (state.tab === 'cuahang') body = viewEntities();
-      if (state.tab === 'calam') body = viewSlots(slots);
-      if (state.tab === 'quantri') body = viewAdmin(codes);
-
-      const isAdmin = state.session.role === 'admin';
-      const roleTxt = isAdmin ? 'Quản trị hệ thống' : (state.session.role === 'region' ? 'Quản lý vùng ' + esc(state.session.entity) : 'Cửa hàng ' + esc(state.session.entity));
-
-      el.innerHTML = `
+  el.innerHTML = `
   <header class="top">
     <div class="brand">JM <em>Lịch làm việc</em></div>
-    <div class="who">${roleTxt}${state.demo ? ' · chế độ thử nghiệm' : ''}</div>
+    <div class="who">${roleTxt}${state.demo?' · chế độ thử nghiệm':''}</div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span class="savemsg ${mk}">${esc(mtxt)}</span>
       <button class="btn btn-sm" style="background:#44403c;color:#fff" onclick="doLogout()">Đăng xuất</button>
@@ -1540,66 +783,67 @@
   <div class="toolbar">
     <div class="weeknav">
       <button class="arrow" title="Tuần trước" onclick="shiftWeek(-1)">‹</button>
-      <button class="wlabel" onclick="toggleCal()">📅 ${weekLabel(state.week)} · ${fmtDM(state.week)} – ${fmtDM(addDays(state.week, 6))} <span class="xs mut">▾</span></button>
+      <button class="wlabel" onclick="toggleCal()">📅 ${weekLabel(state.week)} · ${fmtDM(state.week)} – ${fmtDM(addDays(state.week,6))} <span class="xs mut">▾</span></button>
       <button class="arrow" title="Tuần sau" onclick="shiftWeek(1)">›</button>
       ${state.calOpen ? viewCalendar() : ''}
     </div>
     ${isAdmin ? `<div class="scopetog">
-      <button class="${state.scope === 'store' ? 'on' : ''}" onclick="setScopeMode('store')">Cửa hàng</button>
-      <button class="${state.scope === 'region' ? 'on' : ''}" onclick="setScopeMode('region')">Quản lý vùng</button>
+      <button class="${state.scope==='store'?'on':''}" onclick="setScopeMode('store')">Cửa hàng</button>
+      <button class="${state.scope==='region'?'on':''}" onclick="setScopeMode('region')">Quản lý vùng</button>
     </div>` : ''}
-    ${isAdmin ? `<select onchange="setEntity(this.value)">${codes.map(c => `<option value="${c}" ${c === activeEntity() ? 'selected' : ''}>${c}${pool()[c].name && pool()[c].name !== c ? ' · ' + esc(pool()[c].name) : ''}</option>`).join('')}</select>` : ''}
-    <span class="pill ${locked ? 'pill-lock' : 'pill-open'}">${locked ? 'Đã khóa' : 'Đang mở nhập'}</span>
-    ${isAdmin ? `<button class="btn btn-dark btn-sm" onclick="doToggleLock('${activeEntity()}')">${locked ? 'Mở khóa tuần' : 'Khóa tuần này'}</button>` : ''}
+    ${isAdmin ? `<select onchange="setEntity(this.value)">${codes.map(c=>`<option value="${c}" ${c===activeEntity()?'selected':''}>${c}${pool()[c].name&&pool()[c].name!==c?' · '+esc(pool()[c].name):''}</option>`).join('')}</select>` : ''}
+    <span class="pill ${locked?'pill-lock':'pill-open'}">${locked?'Đã khóa':'Đang mở nhập'}</span>
+    ${isAdmin ? `<button class="btn btn-dark btn-sm" onclick="doToggleLock('${activeEntity()}')">${locked?'Mở khóa tuần':'Khóa tuần này'}</button>` : ''}
     ${canEdit ? `<button class="btn btn-line btn-sm" onclick="doCopyPrev()">Sao chép tuần trước</button>` : ''}
     <nav class="tabs">
-      <button class="${state.tab === 'lich' ? 'on' : ''}" onclick="setTab('lich')">Lịch tuần</button>
-      <button class="${state.tab === 'nhansu' ? 'on' : ''}" onclick="setTab('nhansu')">Nhân sự${probCount ? `<span class="badge" style="background:var(--warn)">${probCount}</span>` : ''}</button>
-      <button class="${state.tab === 'kiemsoat' ? 'on' : ''}" onclick="setTab('kiemsoat')">Kiểm soát${a.warnings.length ? `<span class="badge">${a.warnings.length}</span>` : ''}</button>
-      <button class="${state.tab === 'baocao' ? 'on' : ''}" onclick="setTab('baocao')">Báo cáo</button>
-      ${isAdmin ? `<button class="${state.tab === 'calam' ? 'on' : ''}" onclick="setTab('calam')">Ca làm</button>` : ''}
-      ${isAdmin ? `<button class="${state.tab === 'cuahang' ? 'on' : ''}" onclick="setTab('cuahang')">Cửa hàng</button>` : ''}
-      ${isAdmin ? `<button class="${state.tab === 'quantri' ? 'on' : ''}" onclick="setTab('quantri')">Quản trị</button>` : ''}
+      <button class="${state.tab==='lich'?'on':''}" onclick="setTab('lich')">Lịch tuần</button>
+      <button class="${state.tab==='nhansu'?'on':''}" onclick="setTab('nhansu')">Nhân sự${probCount?`<span class="badge" style="background:var(--warn)">${probCount}</span>`:''}</button>
+      <button class="${state.tab==='kiemsoat'?'on':''}" onclick="setTab('kiemsoat')">Kiểm soát${a.warnings.length?`<span class="badge">${a.warnings.length}</span>`:''}</button>
+      <button class="${state.tab==='baocao'?'on':''}" onclick="setTab('baocao')">Báo cáo</button>
+      ${isAdmin?`<button class="${state.tab==='calam'?'on':''}" onclick="setTab('calam')">Ca làm</button>`:''}
+      ${isAdmin?`<button class="${state.tab==='cuahang'?'on':''}" onclick="setTab('cuahang')">Cửa hàng</button>`:''}
+      ${isAdmin?`<button class="${state.tab==='quantri'?'on':''}" onclick="setTab('quantri')">Quản trị</button>`:''}
     </nav>
   </div>
-  <main>${state.loading ? '<p class="mut">Đang tải…</p>' : body}</main>
+  <main>${state.loading?'<p class="mut">Đang tải…</p>':body}</main>
   ${state.editCell ? viewCellModal(sw, slots) : ''}
-  ${state.editSlot ? viewSlotModal() : ''}`;
-      if (state.tab === 'nhansu' && $('emp-status')) toggleTVFields();
-      if (state.qOpen && $('q-input')) renderSugg();
-    }
+  ${state.editSlot ? viewSlotModal() : ''}
+  ${state.regionCell ? viewRegionCellModal() : ''}`;
+  if (state.tab==='nhansu' && $('emp-status')) toggleTVFields();
+  if (state.qOpen && $('q-input')) renderSugg();
+}
 
-    /* ---- Lịch pop-up (có năm) ---- */
-    function viewCalendar() {
-      const m = parseYMD(state.calMonth);
-      const y = m.getFullYear(), mo = m.getMonth();
-      const first = new Date(y, mo, 1);
-      const startMon = mondayOf(toYMD(first));
-      const years = []; for (let i = y - 3; i <= y + 3; i++) years.push(i);
-      let rows = '';
-      for (let w = 0; w < 6; w++) {
-        const wkStart = addDays(startMon, w * 7);
-        const on = wkStart === state.week;
-        let tds = '';
-        for (let d = 0; d < 7; d++) {
-          const ds = addDays(wkStart, d);
-          const dt = parseYMD(ds);
-          const out = dt.getMonth() !== mo;
-          const today = ds === todayYMD();
-          tds += `<td><div class="d ${out ? 'out' : ''} ${today ? 'today' : ''}">${dt.getDate()}</div></td>`;
-        }
-        rows += `<tr class="wk ${on ? 'on' : ''}" onclick="pickWeek('${wkStart}')" title="${weekLabel(wkStart)} · ${fmtDMY(wkStart)} – ${fmtDMY(addDays(wkStart, 6))}">
-      <td class="wkno">${Math.floor((parseYMD(wkStart).getDate() - 1) / 7) + 1}</td>${tds}</tr>`;
-      }
-      return `<div class="cal" onclick="event.stopPropagation()">
+/* ---- Lịch pop-up (có năm) ---- */
+function viewCalendar(){
+  const m = parseYMD(state.calMonth);
+  const y = m.getFullYear(), mo = m.getMonth();
+  const first = new Date(y, mo, 1);
+  const startMon = mondayOf(toYMD(first));
+  const years = []; for (let i=y-3; i<=y+3; i++) years.push(i);
+  let rows='';
+  for (let w=0; w<6; w++){
+    const wkStart = addDays(startMon, w*7);
+    const on = wkStart === state.week;
+    let tds='';
+    for (let d=0; d<7; d++){
+      const ds = addDays(wkStart, d);
+      const dt = parseYMD(ds);
+      const out = dt.getMonth() !== mo;
+      const today = ds === todayYMD();
+      tds += `<td><div class="d ${out?'out':''} ${today?'today':''}">${dt.getDate()}</div></td>`;
+    }
+    rows += `<tr class="wk ${on?'on':''}" onclick="pickWeek('${wkStart}')" title="${weekLabel(wkStart)} · ${fmtDMY(wkStart)} – ${fmtDMY(addDays(wkStart,6))}">
+      <td class="wkno">${Math.floor((parseYMD(wkStart).getDate()-1)/7)+1}</td>${tds}</tr>`;
+  }
+  return `<div class="cal" onclick="event.stopPropagation()">
     <div class="cal-head">
       <button class="cal-nav" onclick="calNav(-1)">‹</button>
-      <select onchange="calSet(null,this.value)">${MONTHS.map((n, i) => `<option value="${i}" ${i === mo ? 'selected' : ''}>${n}</option>`).join('')}</select>
-      <select onchange="calSet(this.value,null)">${years.map(yy => `<option value="${yy}" ${yy === y ? 'selected' : ''}>${yy}</option>`).join('')}</select>
+      <select onchange="calSet(null,this.value)">${MONTHS.map((n,i)=>`<option value="${i}" ${i===mo?'selected':''}>${n}</option>`).join('')}</select>
+      <select onchange="calSet(this.value,null)">${years.map(yy=>`<option value="${yy}" ${yy===y?'selected':''}>${yy}</option>`).join('')}</select>
       <button class="cal-nav" onclick="calNav(1)">›</button>
     </div>
     <table>
-      <tr><th></th>${DAYS_SHORT.map(d => `<th>${d}</th>`).join('')}</tr>
+      <tr><th></th>${DAYS_SHORT.map(d=>`<th>${d}</th>`).join('')}</tr>
       ${rows}
     </table>
     <div class="cal-foot">
@@ -1608,24 +852,24 @@
     </div>
     <p class="xs mut" style="margin-top:8px">Nhấn vào một hàng để chọn cả tuần đó.</p>
   </div>`;
-    }
+}
 
-    function viewLogin() {
-      const scodes = Object.keys(state.stores).length ? Object.keys(state.stores) : Object.keys(SEED);
-      const rcodes = Object.keys(state.regions).length ? Object.keys(state.regions) : Object.keys(DEFAULT_REGIONS);
-      return `<div class="login-wrap"><div class="login-box">
+function viewLogin(){
+  const scodes = Object.keys(state.stores).length ? Object.keys(state.stores) : Object.keys(SEED);
+  const rcodes = Object.keys(state.regions).length ? Object.keys(state.regions) : Object.keys(DEFAULT_REGIONS);
+  return `<div class="login-wrap"><div class="login-box">
     <h1 style="color:#fafaf9;font-size:23px">JM <span style="color:#fda4af">Lịch làm việc</span></h1>
-    <p class="sm" style="color:#a8a29e;margin:4px 0 18px">TTKD Offline — nhập lịch, kiểm soát giờ công, báo cáo${state.demo ? ' · <b>chế độ thử nghiệm (chưa nối Google Sheets)</b>' : ''}</p>
+    <p class="sm" style="color:#a8a29e;margin:4px 0 18px">TTKD Offline — nhập lịch, kiểm soát giờ công, báo cáo${state.demo?' · <b>chế độ thử nghiệm (chưa nối Google Sheets)</b>':''}</p>
     <div class="login-grid">
       <div class="card">
         <h3>Cửa hàng</h3>
-        <select id="lg-store" class="field">${scodes.map(c => `<option>${c}</option>`).join('')}</select>
+        <select id="lg-store" class="field">${scodes.map(c=>`<option>${c}</option>`).join('')}</select>
         <input id="lg-pin" class="field" type="password" placeholder="Mã PIN cửa hàng" onkeydown="if(event.key==='Enter')doLoginStore()">
         <button class="btn btn-dark" style="width:100%" onclick="doLoginStore()">Vào nhập lịch</button>
       </div>
       <div class="card">
         <h3>Quản lý vùng</h3>
-        <select id="lg-region" class="field">${rcodes.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+        <select id="lg-region" class="field">${rcodes.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
         <input id="lg-rpin" class="field" type="password" placeholder="Mã PIN khu vực" onkeydown="if(event.key==='Enter')doLoginRegion()">
         <button class="btn" style="width:100%;background:var(--blue);color:#fff" onclick="doLoginRegion()">Vào lịch vùng</button>
       </div>
@@ -1637,143 +881,146 @@
       </div>
     </div>
   </div></div>`;
-    }
+}
 
-    function viewGrid(sw, a, slots, canEdit, locked) {
-      const assign = sw.assign || {};
-      const rmap = rosterMap(activeEntity());
-      const dayTotals = DAYS.map((_, di) => Math.round(Object.values(a.dayPersonHours[di] || {}).reduce((x, y) => x + y, 0) * 100) / 100);
-      if (!slots.length) return '<div class="card"><p class="sm mut">Chưa có ca làm việc nào cho phạm vi này. Quản trị vào tab <b>Ca làm</b> để thêm.</p></div>';
-      const warnCell = (sid, di) => {
-        const names = (assign[sid] || {})[String(di)] || [];
-        return a.warnings.some(w => w.di === di && w.name && names.includes(w.name) && (w.type === 'overlap' || w.type === 'day'));
-      };
-      const mode = state.fillMode;
-      let rows = '', lastRole = null;
-      slots.forEach(slot => {
-        const newRole = slot.role !== lastRole; lastRole = slot.role;
-        const canRowFill = canEdit && mode === 'paint' && state.brush && state.brush !== '__ERASE__';
-        rows += `<tr class="${newRole ? 'sep' : ''}">
-      <td class="slotinfo"><b>${esc(slot.label)}</b>${canRowFill ? ` <button class="rowfill" title="Điền ${esc(state.brush)} cho cả 7 ngày" onclick="fillRow('${slot.id}')">▸ cả tuần</button>` : ''}<div class="xs mut">${esc(slot.role)} · ${slotHours(slot)}h</div></td>`;
-        DAYS.forEach((_, di) => {
-          const names = (assign[slot.id] || {})[String(di)] || [];
-          const bad = warnCell(slot.id, di);
-          const isSel = state.selCell && state.selCell.slotId === slot.id && state.selCell.di === di;
-          const isQ = state.qOpen && state.qOpen.slotId === slot.id && state.qOpen.di === di;
+function viewGrid(sw, a, slots, canEdit, locked){
+  const assign = sw.assign || {};
+  const rmap = rosterMap(activeEntity());
+  const dayTotals = DAYS.map((_,di)=>Math.round(Object.values(a.dayPersonHours[di]||{}).reduce((x,y)=>x+y,0)*100)/100);
+  if (!slots.length) return '<div class="card"><p class="sm mut">Chưa có ca làm việc nào cho phạm vi này. Quản trị vào tab <b>Ca làm</b> để thêm.</p></div>';
+  const warnCell = (sid,di) => {
+    const names = (assign[sid]||{})[String(di)]||[];
+    return a.warnings.some(w=>w.di===di && w.name && names.includes(w.name) && (w.type==='overlap'||w.type==='day'));
+  };
+  const mode = state.fillMode;
+  let rows='', lastRole=null;
+  slots.forEach(slot => {
+    const newRole = slot.role !== lastRole; lastRole = slot.role;
+    const canRowFill = canEdit && mode==='paint' && state.brush && state.brush!=='__ERASE__';
+    rows += `<tr class="${newRole?'sep':''}">
+      <td class="slotinfo"><b>${esc(slot.label)}</b>${canRowFill?` <button class="rowfill" title="Điền ${esc(state.brush)} cho cả 7 ngày" onclick="fillRow('${slot.id}')">▸ cả tuần</button>`:''}<div class="xs mut">${esc(slot.role)} · ${slotHours(slot)}h</div></td>`;
+    DAYS.forEach((_,di)=>{
+      const names = (assign[slot.id]||{})[String(di)]||[];
+      const bad = warnCell(slot.id,di);
+      const isSel = state.selCell && state.selCell.slotId===slot.id && state.selCell.di===di;
+      const isQ = state.qOpen && state.qOpen.slotId===slot.id && state.qOpen.di===di;
 
-          /* Chế độ gõ nhanh: ô đang mở thành ô nhập */
-          if (canEdit && mode === 'type' && isQ) {
-            rows += `<td><div class="qwrap">
+      /* Chế độ gõ nhanh: ô đang mở thành ô nhập */
+      if (canEdit && mode==='type' && isQ){
+        rows += `<td><div class="qwrap">
           <textarea id="q-input" class="qinput" rows="2" placeholder="Gõ tên, cách nhau dấu phẩy"
             oninput="qInputChanged()" onkeydown="qKey(event)" onblur="setTimeout(()=>{if(state.qOpen)qCommit(false)},150)">${esc(names.join(', '))}</textarea>
           <div class="sugg" id="q-sugg"></div>
         </div></td>`;
-            return;
-          }
+        return;
+      }
 
-          const tags = names.map(n => {
-            const tv = rmap[n] && rmap[n].status === 'TV';
-            const x = (canEdit && (mode === 'paint' || mode === 'click')) ? `<span class="x" onclick="delName(event,'${slot.id}',${di},'${esc(n)}')">×</span>` : '';
-            return `<span class="tag ${n === MGR ? 'mgr' : (tv ? 'tv' : '')}">${esc(n)}${tv ? ' ⋆' : ''}${x}</span>`;
-          }).join('');
-          const inner = names.length
-            ? tags + `<div class="xs mut" style="margin-top:2px">${Math.round(names.length * slotHours(slot) * 100) / 100}h</div>`
-            : `<span class="xs" style="color:#d6d3d1">${canEdit ? (mode === 'type' ? 'gõ tên' : (mode === 'paint' ? 'nhấn để tô' : '+ thêm')) : '—'}</span>`;
+      const items = (assign[slot.id]||{})[String(di)]||[];
+      const tags = items.map(raw=>{
+        const it = (raw && typeof raw==='object') ? raw : {n:raw, h:''};
+        const n = it.n, tv = rmap[n] && rmap[n].status==='TV';
+        const x = (canEdit && (mode==='paint'||mode==='click')) ? `<span class="x" onclick="delName(event,'${slot.id}',${di},'${esc(n)}')">×</span>` : '';
+        const store = it.h ? `<span class="storego">→ ${esc(it.h)}</span>` : '';
+        return `<span class="tag ${n===MGR?'mgr':(tv?'tv':'')}">${esc(n)}${tv?' ⋆':''}${store}${x}</span>`;
+      }).join('');
+      const inner = names.length
+        ? tags + `<div class="xs mut" style="margin-top:2px">${Math.round(names.length*slotHours(slot)*100)/100}h</div>`
+        : `<span class="xs" style="color:#d6d3d1">${canEdit?(mode==='type'?'gõ tên':(mode==='paint'?'nhấn để tô':'+ thêm')):'—'}</span>`;
 
-          let handler = '', cls = '';
-          if (!canEdit) handler = 'disabled';
-          else if (mode === 'paint') { cls = 'paint'; handler = `onclick="paintCell('${slot.id}',${di})"`; }
-          else if (mode === 'type') handler = `onclick="openQ('${slot.id}',${di})"`;
-          else handler = `onclick="openCell('${slot.id}',${di})"`;
+      let handler = '', cls = '';
+      if (!canEdit) handler = 'disabled';
+      else if (mode==='paint'){ cls='paint'; handler = `onclick="paintCell('${slot.id}',${di})"`; }
+      else if (mode==='type') handler = `onclick="openQ('${slot.id}',${di})"`;
+      else handler = `onclick="openCell('${slot.id}',${di})"`;
 
-          /* Kéo thả + chọn ô để copy/paste: bật ở mọi chế độ khi được sửa */
-          const dnd = canEdit ? `ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropCell(event,'${slot.id}',${di})" oncontextmenu="event.preventDefault();selectCell(event,'${slot.id}',${di})"` : '';
+      /* Kéo thả + chọn ô để copy/paste: bật ở mọi chế độ khi được sửa */
+      const dnd = canEdit ? `ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropCell(event,'${slot.id}',${di})" oncontextmenu="event.preventDefault();selectCell(event,'${slot.id}',${di})"` : '';
 
-          rows += `<td><button class="cell ${names.length ? '' : 'empty'} ${bad ? 'warn' : ''} ${cls} ${isSel ? 'sel' : ''} ${canEdit && mode === 'click' ? 'canedit' : ''}" ${handler} ${dnd}>${inner}</button></td>`;
-        });
-        rows += '</tr>';
-      });
+      rows += `<td><button class="cell ${names.length?'':'empty'} ${bad?'warn':''} ${cls} ${isSel?'sel':''} ${canEdit&&mode==='click'?'canedit':''}" ${handler} ${dnd}>${inner}</button></td>`;
+    });
+    rows += '</tr>';
+  });
 
-      const roster = rosterOf(activeEntity());
-      const slotHasMgr = state.scope === 'store' && slots.some(s => s.role === MGR);
-      const palette = (canEdit && mode === 'paint') ? `<div class="palette">
+  const roster = rosterOf(activeEntity());
+  const slotHasMgr = state.scope==='store' && slots.some(s=>s.role===MGR);
+  const palette = (canEdit && mode==='paint') ? `<div class="palette">
     <span class="xs" style="color:var(--blue);font-weight:600">Chọn người →</span>
-    ${slotHasMgr ? `<button class="pchip ${state.brush === MGR ? 'on' : ''}" draggable="true" ondragstart="dragStart(event,'${MGR}')" onclick="pickBrush('${MGR}')">${MGR}</button>` : ''}
-    ${roster.map(r => `<button class="pchip ${r.status === 'TV' ? 'tvc' : ''} ${state.brush === r.name ? 'on' : ''}" draggable="true" ondragstart="dragStart(event,'${esc(r.name)}')" onclick="pickBrush('${esc(r.name)}')">${esc(r.name)}${r.status === 'TV' ? ' ⋆' : ''}</button>`).join('')}
-    ${roster.length === 0 ? '<span class="xs mut">Chưa có nhân sự — thêm ở tab Nhân sự</span>' : ''}
-    ${roster.length ? `<button class="pchip eraser ${state.brush === '__ERASE__' ? 'on' : ''}" onclick="pickBrush('__ERASE__')" title="Nhấn ô để xóa sạch">🧹 Xóa ô</button>` : ''}
-    <span class="xs" style="color:var(--blue);margin-left:auto">${state.brush ? (state.brush === '__ERASE__' ? 'Nhấn ô để xóa' : 'Nhấn ô để thêm/bớt <b>' + esc(state.brush) + '</b> · hoặc kéo thẻ thả vào ô') : '…rồi nhấn vào các ô cần xếp'}</span>
+    ${slotHasMgr?`<button class="pchip ${state.brush===MGR?'on':''}" draggable="true" ondragstart="dragStart(event,'${MGR}')" onclick="pickBrush('${MGR}')">${MGR}</button>`:''}
+    ${roster.map(r=>`<button class="pchip ${r.status==='TV'?'tvc':''} ${state.brush===r.name?'on':''}" draggable="true" ondragstart="dragStart(event,'${esc(r.name)}')" onclick="pickBrush('${esc(r.name)}')">${esc(r.name)}${r.status==='TV'?' ⋆':''}</button>`).join('')}
+    ${roster.length===0?'<span class="xs mut">Chưa có nhân sự — thêm ở tab Nhân sự</span>':''}
+    ${roster.length?`<button class="pchip eraser ${state.brush==='__ERASE__'?'on':''}" onclick="pickBrush('__ERASE__')" title="Nhấn ô để xóa sạch">🧹 Xóa ô</button>`:''}
+    <span class="xs" style="color:var(--blue);margin-left:auto">${state.brush?(state.brush==='__ERASE__'?'Nhấn ô để xóa':'Nhấn ô để thêm/bớt <b>'+esc(state.brush)+'</b> · hoặc kéo thẻ thả vào ô'):'…rồi nhấn vào các ô cần xếp'}</span>
   </div>` : '';
 
-      const modebar = canEdit ? `<div class="modebar">
+  const modebar = canEdit ? `<div class="modebar">
     <span class="xs mut" style="font-weight:600">Cách nhập</span>
     <div class="modetog">
-      <button class="${mode === 'paint' ? 'on' : ''}" onclick="setFillMode('paint')">Chọn tên rồi tô</button>
-      <button class="${mode === 'type' ? 'on' : ''}" onclick="setFillMode('type')">Gõ nhanh</button>
-      <button class="${mode === 'click' ? 'on' : ''}" onclick="setFillMode('click')">Tick từng ô</button>
+      <button class="${mode==='paint'?'on':''}" onclick="setFillMode('paint')">Chọn tên rồi tô</button>
+      <button class="${mode==='type'?'on':''}" onclick="setFillMode('type')">Gõ nhanh</button>
+      <button class="${mode==='click'?'on':''}" onclick="setFillMode('click')">Tick từng ô</button>
     </div>
     <div class="hintbar">
-      ${mode === 'paint' ? 'Chọn 1 tên → nhấn các ô · kéo thẻ thả vào ô cũng được' : ''}
-      ${mode === 'type' ? '<span>Nhấn ô → gõ tên, cách nhau dấu phẩy · <kbd>Tab</kbd> sang ngày kế · <kbd>Enter</kbd> lưu</span>' : ''}
-      ${mode === 'click' ? 'Nhấn ô để mở danh sách tick chọn (cách cũ)' : ''}
+      ${mode==='paint'?'Chọn 1 tên → nhấn các ô · kéo thẻ thả vào ô cũng được':''}
+      ${mode==='type'?'<span>Nhấn ô → gõ tên, cách nhau dấu phẩy · <kbd>Tab</kbd> sang ngày kế · <kbd>Enter</kbd> lưu</span>':''}
+      ${mode==='click'?'Nhấn ô để mở danh sách tick chọn (cách cũ)':''}
     </div>
     <div class="hintbar" style="margin-left:auto">
       <span>Chuột phải vào ô để chọn</span>
-      <button class="btn btn-line btn-sm" ${state.selCell ? '' : 'disabled style="opacity:.4"'} onclick="copyCell()">Copy</button>
-      <button class="btn btn-line btn-sm" ${state.selCell && state.clip ? '' : 'disabled style="opacity:.4"'} onclick="pasteCell()">Dán${state.clip ? ' (' + (state.clip.names.join(', ') || 'trống') + ')' : ''}</button>
-      <button class="btn btn-line btn-sm" ${state.selCell ? '' : 'disabled style="opacity:.4"'} onclick="clearCell()">Xóa ô</button>
+      <button class="btn btn-line btn-sm" ${state.selCell?'':'disabled style="opacity:.4"'} onclick="copyCell()">Copy</button>
+      <button class="btn btn-line btn-sm" ${state.selCell&&state.clip?'':'disabled style="opacity:.4"'} onclick="pasteCell()">Dán${state.clip?' ('+(state.clip.items.map(it=>it.n).join(', ')||'trống')+')':''}</button>
+      <button class="btn btn-line btn-sm" ${state.selCell?'':'disabled style="opacity:.4"'} onclick="clearCell()">Xóa ô</button>
     </div>
   </div>` : '';
 
-      return `
-    ${locked && state.session.role !== 'admin' ? '<div class="notice red">Tuần này đã được TTKD khóa. Cần điều chỉnh gấp? Liên hệ quản trị để mở khóa.</div>' : ''}
-    ${state.scope === 'region' ? '<div class="notice blue">Đang xếp lịch <b>Quản lý vùng</b> — ca làm và nhân sự ở đây tách riêng với cửa hàng.</div>' : ''}
+  return `
+    ${locked && state.session.role!=='admin' ? '<div class="notice red">Tuần này đã được TTKD khóa. Cần điều chỉnh gấp? Liên hệ quản trị để mở khóa.</div>' : ''}
+    ${state.scope==='region' ? '<div class="notice blue">Đang xếp lịch <b>Quản lý vùng</b> — ca làm và nhân sự ở đây tách riêng với cửa hàng.</div>' : ''}
     ${modebar}${palette}
     <div class="scroll"><table class="grid">
-      <thead><tr><th>Ca làm</th>${DAYS.map((d, di) => {
-        const ds = addDays(state.week, di), isToday = ds === todayYMD();
-        return `<th style="${isToday ? 'color:var(--rose)' : ''}">${d}<div class="xs" style="font-weight:${isToday ? '700' : '400'};color:${isToday ? 'var(--rose)' : 'var(--mut)'}">${fmtDM(ds)}</div></th>`;
+      <thead><tr><th>Ca làm</th>${DAYS.map((d,di)=>{
+        const ds = addDays(state.week,di), isToday = ds===todayYMD();
+        return `<th style="${isToday?'color:var(--rose)':''}">${d}<div class="xs" style="font-weight:${isToday?'700':'400'};color:${isToday?'var(--rose)':'var(--mut)'}">${fmtDM(ds)}</div></th>`;
       }).join('')}</tr></thead>
       <tbody>${rows}
-      <tr class="totrow sep"><td>Tổng giờ công/ngày</td>${dayTotals.map(t => `<td>${t}h</td>`).join('')}</tr></tbody>
+      <tr class="totrow sep"><td>Tổng giờ công/ngày</td>${dayTotals.map(t=>`<td>${t}h</td>`).join('')}</tr></tbody>
     </table></div>
     <p class="xs mut" style="margin-top:8px">Thẻ vàng ⋆ = đang thử việc · ô nền đỏ = trùng giờ hoặc vượt giờ · nhấn × trên thẻ tên để bỏ người khỏi ca.</p>`;
-    }
+}
 
-    function viewCellModal(sw, slots) {
-      const { slotId, di } = state.editCell;
-      const slot = slots.find(s => s.id === slotId);
-      if (!slot) return '';
-      const roster = rosterOf(activeEntity());
-      const options = (state.scope === 'store' && slot.role === MGR) ? [{ name: MGR }].concat(roster) : roster;
-      const current = (sw.assign[slotId] || {})[String(di)] || [];
-      return `<div class="modal-bg" onclick="closeCell()"><div class="modal" onclick="event.stopPropagation()">
-    <h3 style="margin-bottom:2px">${DAYS[di]} ${fmtDM(addDays(state.week, di))} · ca ${esc(slot.label)}</h3>
+function viewCellModal(sw, slots){
+  const {slotId,di} = state.editCell;
+  const slot = slots.find(s=>s.id===slotId);
+  if (!slot) return '';
+  const roster = rosterOf(activeEntity());
+  const options = (state.scope==='store' && slot.role===MGR) ? [{name:MGR}].concat(roster) : roster;
+  const current = (sw.assign[slotId]||{})[String(di)] || [];
+  return `<div class="modal-bg" onclick="closeCell()"><div class="modal" onclick="event.stopPropagation()">
+    <h3 style="margin-bottom:2px">${DAYS[di]} ${fmtDM(addDays(state.week,di))} · ca ${esc(slot.label)}</h3>
     <p class="xs mut" style="margin-bottom:12px">${esc(slot.role)} · ${slotHours(slot)}h công / người</p>
-    ${options.length === 0 ? '<p class="sm mut" style="margin-bottom:12px">Chưa có nhân sự — thêm ở tab Nhân sự trước.</p>' : ''}
+    ${options.length===0?'<p class="sm mut" style="margin-bottom:12px">Chưa có nhân sự — thêm ở tab Nhân sự trước.</p>':''}
     <div style="margin-bottom:14px">
-      ${options.map(o => `<label class="opt"><input type="checkbox" value="${esc(o.name)}" ${current.includes(o.name) ? 'checked' : ''}> ${esc(o.name)}${o.status === 'TV' ? ' <span class="pill pill-tv">thử việc</span>' : ''}</label>`).join('')}
+      ${options.map(o=>`<label class="opt"><input type="checkbox" value="${esc(o.name)}" ${current.includes(o.name)?'checked':''}> ${esc(o.name)}${o.status==='TV'?' <span class="pill pill-tv">thử việc</span>':''}</label>`).join('')}
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-dark" style="flex:1" onclick="saveCell()">Lưu ca</button>
       <button class="btn btn-line" onclick="closeCell()">Hủy</button>
     </div>
   </div></div>`;
-    }
+}
 
-    /* ---- Tab Ca làm ---- */
-    function viewSlots(slots) {
-      return `
-  <div class="notice blue">Đang sửa ca của <b>${state.scope === 'region' ? 'Quản lý vùng' : 'Cửa hàng'}</b>. Đổi phạm vi ở thanh trên (Cửa hàng / Quản lý vùng).</div>
+/* ---- Tab Ca làm ---- */
+function viewSlots(slots){
+  return `
+  <div class="notice blue">Đang sửa ca của <b>${state.scope==='region'?'Quản lý vùng':'Cửa hàng'}</b>. Đổi phạm vi ở thanh trên (Cửa hàng / Quản lý vùng).</div>
   <div class="card">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
       <h3 style="margin:0">Ca làm việc <span class="mut xs" style="font-weight:400">· ${slots.length} ca</span></h3>
       <button class="btn btn-dark btn-sm" style="margin-left:auto" onclick="openSlot('new')">+ Thêm ca</button>
     </div>
-    ${slots.length === 0 ? '<p class="sm mut">Chưa có ca nào.</p>' : `
+    ${slots.length===0?'<p class="sm mut">Chưa có ca nào.</p>':`
     <div style="overflow-x:auto"><table class="report-table" style="min-width:600px">
       <tr><th>Tên ca</th><th>Bắt đầu</th><th>Kết thúc</th><th>Chức vụ</th><th style="text-align:right">Số giờ</th><th></th></tr>
-      ${slots.map(s => `<tr>
+      ${slots.map(s=>`<tr>
         <td><b>${esc(s.label)}</b></td><td>${esc(s.start)}</td><td>${esc(s.end)}</td><td>${esc(s.role)}</td>
         <td style="text-align:right"><b>${slotHours(s)}h</b></td>
         <td style="text-align:right;white-space:nowrap">
@@ -1783,11 +1030,36 @@
     </table></div>`}
     <p class="xs mut" style="margin-top:10px">Sửa giờ một ca sẽ cập nhật số giờ công của mọi lịch dùng ca đó. Xóa ca chỉ ẩn khỏi lịch mới — lịch cũ giữ nguyên để đối chiếu lịch sử.</p>
   </div>`;
-    }
-    function viewSlotModal() {
-      const s = state.editSlot, isNew = !s.id;
-      return `<div class="modal-bg" onclick="closeSlot()"><div class="modal" onclick="event.stopPropagation()">
-    <h3>${isNew ? 'Thêm ca mới' : 'Sửa ca'} · ${state.scope === 'region' ? 'Quản lý vùng' : 'Cửa hàng'}</h3>
+}
+function viewRegionCellModal(){
+  const {slotId, di, name} = state.regionCell;
+  const slot = curSlots().find(s=>s.id===slotId);
+  // Danh sách store thuộc khu vực này (theo cột region của stores)
+  const rgCode = activeEntity();
+  const myStores = Object.keys(state.stores).filter(c => state.stores[c].region === rgCode);
+  const allStores = Object.keys(state.stores);
+  const list = myStores.length ? myStores : allStores;
+  const cur = cellItems(slotId, di).find(it=>it.n===name);
+  const curHint = cur ? cur.h : '';
+  return `<div class="modal-bg" onclick="closeRegionCell()"><div class="modal" onclick="event.stopPropagation()">
+    <h3 style="margin-bottom:2px">${esc(name)} · ${DAYS[di]} ${fmtDM(addDays(state.week,di))}</h3>
+    <p class="xs mut" style="margin-bottom:12px">Ca ${esc(slot?slot.label:'')} · chọn cửa hàng sẽ đi</p>
+    <select id="rc-store" class="field" style="margin-bottom:14px">
+      <option value="">— Văn phòng / không đi store —</option>
+      ${list.map(c=>`<option value="${c}" ${c===curHint?'selected':''}>${c}${state.stores[c].name&&state.stores[c].name!==c?' · '+esc(state.stores[c].name):''}</option>`).join('')}
+    </select>
+    ${myStores.length===0?'<p class="xs mut" style="margin-bottom:12px">Khu vực này chưa gán cửa hàng nào (gán ở tab Cửa hàng) — đang hiện tất cả cửa hàng.</p>':''}
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-dark" style="flex:1" onclick="saveRegionCell()">Lưu</button>
+      <button class="btn btn-line" onclick="closeRegionCell()">Hủy</button>
+    </div>
+  </div></div>`;
+}
+
+function viewSlotModal(){
+  const s = state.editSlot, isNew = !s.id;
+  return `<div class="modal-bg" onclick="closeSlot()"><div class="modal" onclick="event.stopPropagation()">
+    <h3>${isNew?'Thêm ca mới':'Sửa ca'} · ${state.scope==='region'?'Quản lý vùng':'Cửa hàng'}</h3>
     <label class="fld" style="margin-bottom:10px">Tên ca (hiện trên lịch)
       <input id="sl-label" class="field" value="${esc(s.label)}" placeholder="VD: 9h – 13h"></label>
     <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -1803,25 +1075,25 @@
       <button class="btn btn-line" onclick="closeSlot()">Hủy</button>
     </div>
   </div></div>`;
-    }
+}
 
-    /* ---- Tab Cửa hàng ---- */
-    function viewEntities() {
-      const scodes = Object.keys(state.stores), rcodes = Object.keys(state.regions);
-      return `
+/* ---- Tab Cửa hàng ---- */
+function viewEntities(){
+  const scodes = Object.keys(state.stores), rcodes = Object.keys(state.regions);
+  return `
   <div class="card" style="margin-bottom:16px">
     <h3>Cửa hàng <span class="mut xs" style="font-weight:400">· ${scodes.length} cửa hàng đang hoạt động</span></h3>
     <div style="overflow-x:auto"><table class="report-table" style="min-width:680px">
       <tr><th>Mã</th><th>Tên hiển thị</th><th>Khu vực</th><th>PIN mới</th><th style="text-align:right">Nhân sự</th><th></th></tr>
-      ${scodes.map(c => `<tr data-store="${esc(c)}">
+      ${scodes.map(c=>`<tr data-store="${esc(c)}">
         <td><b>${esc(c)}</b></td>
-        <td><input class="f-name" value="${esc(state.stores[c].name || c)}" style="width:150px"></td>
+        <td><input class="f-name" value="${esc(state.stores[c].name||c)}" style="width:150px"></td>
         <td><select class="f-region" style="width:110px">
           <option value="">— chưa gán —</option>
-          ${rcodes.map(r => `<option value="${r}" ${state.stores[c].region === r ? 'selected' : ''}>${r}</option>`).join('')}
+          ${rcodes.map(r=>`<option value="${r}" ${state.stores[c].region===r?'selected':''}>${r}</option>`).join('')}
         </select></td>
         <td><input class="f-pin" placeholder="(trống = giữ)" style="width:110px"></td>
-        <td style="text-align:right">${(state.stores[c].roster || []).length}</td>
+        <td style="text-align:right">${(state.stores[c].roster||[]).length}</td>
         <td style="text-align:right;white-space:nowrap">
           <button class="btn btn-line btn-sm" onclick="doUpdStore('${esc(c)}')">Lưu</button>
           <button class="btn btn-sm" style="color:var(--bad)" onclick="doDelStore('${esc(c)}')">Ẩn</button>
@@ -1830,7 +1102,7 @@
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
       <label class="fld">Mã cửa hàng mới<input id="st-code" placeholder="VD: JMHNI05" style="width:130px"></label>
       <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:160px"></label>
-      <label class="fld">Khu vực<select id="st-region" style="width:120px"><option value="">— chưa gán —</option>${rcodes.map(r => `<option value="${r}">${r}</option>`).join('')}</select></label>
+      <label class="fld">Khu vực<select id="st-region" style="width:120px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
       <label class="fld">PIN<input id="st-pin" placeholder="1111" style="width:90px"></label>
       <button class="btn btn-dark" onclick="doAddStore()">+ Thêm cửa hàng</button>
     </div>
@@ -1839,11 +1111,11 @@
     <h3>Khu vực (Quản lý vùng)</h3>
     <div style="overflow-x:auto"><table class="report-table" style="min-width:560px">
       <tr><th>Mã</th><th>Tên khu vực</th><th>PIN mới</th><th style="text-align:right">Số cửa hàng</th><th></th></tr>
-      ${rcodes.map(c => `<tr data-region="${esc(c)}">
+      ${rcodes.map(c=>`<tr data-region="${esc(c)}">
         <td><b>${esc(c)}</b></td>
-        <td><input class="f-name" value="${esc(state.regions[c].name || c)}" style="width:190px"></td>
+        <td><input class="f-name" value="${esc(state.regions[c].name||c)}" style="width:190px"></td>
         <td><input class="f-pin" placeholder="(trống = giữ)" style="width:110px"></td>
-        <td style="text-align:right">${scodes.filter(s => state.stores[s].region === c).length}</td>
+        <td style="text-align:right">${scodes.filter(s=>state.stores[s].region===c).length}</td>
         <td style="text-align:right"><button class="btn btn-line btn-sm" onclick="doUpdRegion('${esc(c)}')">Lưu</button></td>
       </tr>`).join('')}
     </table></div>
@@ -1854,28 +1126,28 @@
       <button class="btn btn-dark" onclick="doAddRegion()">+ Thêm khu vực</button>
     </div>
   </div>`;
-    }
+}
 
-    function viewStaff(a) {
-      const code = activeEntity();
-      const roster = rosterOf(code);
-      const notices = probationNotices(code);
-      return `
-  ${notices.map(n => `<div class="warnitem soft" style="margin-bottom:6px"><span>◌</span>${esc(n.msg)}</div>`).join('')}
-  <div class="card" style="margin-bottom:16px;margin-top:${notices.length ? '10px' : '0'}">
-    <h3>Nhân sự ${esc(code)} <span class="mut xs" style="font-weight:400">· ${roster.length} người${state.scope === 'region' ? ' · quản lý vùng' : ''}</span></h3>
-    ${roster.length === 0 ? '<p class="sm mut">Chưa có nhân viên nào. Thêm bên dưới.</p>' : `
+function viewStaff(a){
+  const code = activeEntity();
+  const roster = rosterOf(code);
+  const notices = probationNotices(code);
+  return `
+  ${notices.map(n=>`<div class="warnitem soft" style="margin-bottom:6px"><span>◌</span>${esc(n.msg)}</div>`).join('')}
+  <div class="card" style="margin-bottom:16px;margin-top:${notices.length?'10px':'0'}">
+    <h3>Nhân sự ${esc(code)} <span class="mut xs" style="font-weight:400">· ${roster.length} người${state.scope==='region'?' · quản lý vùng':''}</span></h3>
+    ${roster.length===0?'<p class="sm mut">Chưa có nhân viên nào. Thêm bên dưới.</p>':`
     <div style="overflow-x:auto"><table class="report-table" style="min-width:640px">
       <tr><th>Tên</th><th>Trạng thái</th><th>Bắt đầu thử việc</th><th>Hết hạn thử việc</th><th style="text-align:right">Giờ tuần này</th><th></th></tr>
-      ${roster.map(r => {
-        const tv = r.status === 'TV', left = tv && r.end ? diffDays(r.end, todayYMD()) : null;
+      ${roster.map(r=>{
+        const tv=r.status==='TV', left = tv&&r.end ? diffDays(r.end, todayYMD()) : null;
         return `<tr data-emp="${esc(r.name)}">
-          <td><b>${esc(r.name)}</b> ${tv ? `<span class="pill pill-tv">thử việc${left !== null ? (left < 0 ? ' · quá hạn' : ' · còn ' + left + ' ngày') : ''}</span>` : '<span class="pill pill-ct">chính thức</span>'}</td>
+          <td><b>${esc(r.name)}</b> ${tv?`<span class="pill pill-tv">thử việc${left!==null?(left<0?' · quá hạn':' · còn '+left+' ngày'):''}</span>`:'<span class="pill pill-ct">chính thức</span>'}</td>
           <td><select class="f-status" onchange="this.closest('tr').querySelectorAll('.f-start,.f-end').forEach(x=>x.style.display=this.value==='TV'?'':'none')">
-            <option value="CT" ${!tv ? 'selected' : ''}>Chính thức</option><option value="TV" ${tv ? 'selected' : ''}>Thử việc</option></select></td>
-          <td><input type="date" class="f-start" value="${r.start || ''}" style="${tv ? '' : 'display:none'}"></td>
-          <td><input type="date" class="f-end" value="${r.end || ''}" style="${tv ? '' : 'display:none'}"></td>
-          <td style="text-align:right"><b>${a.weekTotal[r.name] || 0}h</b></td>
+            <option value="CT" ${!tv?'selected':''}>Chính thức</option><option value="TV" ${tv?'selected':''}>Thử việc</option></select></td>
+          <td><input type="date" class="f-start" value="${r.start||''}" style="${tv?'':'display:none'}"></td>
+          <td><input type="date" class="f-end" value="${r.end||''}" style="${tv?'':'display:none'}"></td>
+          <td style="text-align:right"><b>${a.weekTotal[r.name]||0}h</b></td>
           <td style="text-align:right;white-space:nowrap">
             <button class="btn btn-line btn-sm" onclick="doUpdEmp('${esc(r.name)}')">Lưu</button>
             <button class="btn btn-sm" style="color:var(--bad)" onclick="doDelEmp('${esc(r.name)}')">Xóa</button>
@@ -1889,74 +1161,74 @@
       <label class="fld">Tên (ngắn gọn, không trùng)<input id="emp-name" placeholder="VD: Lan" style="width:160px"></label>
       <label class="fld">Trạng thái<select id="emp-status" onchange="toggleTVFields()"><option value="TV">Thử việc</option><option value="CT">Chính thức</option></select></label>
       <label class="fld">Bắt đầu thử việc<input id="emp-start" type="date" value="${todayYMD()}"></label>
-      <label class="fld">Hết hạn thử việc<input id="emp-end" type="date" value="${addDays(todayYMD(), 30)}"></label>
+      <label class="fld">Hết hạn thử việc<input id="emp-end" type="date" value="${addDays(todayYMD(),30)}"></label>
       <button class="btn btn-dark" onclick="doAddEmp()">Thêm</button>
     </div>
     <p class="xs mut" style="margin-top:10px">Tự thêm được nhân sự kể cả khi lịch tuần đã khóa. Mặc định thử việc 30 ngày — chỉnh theo hợp đồng. App nhắc khi còn ≤ 7 ngày hoặc quá hạn.</p>
   </div>`;
-    }
+}
 
-    function viewControl(codes, allA) {
-      const list = state.session.role === 'admin' ? codes : [state.session.entity];
-      return `<p class="sm mut" style="margin-bottom:12px">Ngưỡng: tối đa ${state.settings.maxDay}h/người/ngày · ${state.settings.maxWeek}h/người/tuần · phát hiện trùng ca, khung giờ trống ${fmtH(OPEN_H)}–${fmtH(CLOSE_H)} và hạn thử việc.</p>`
-        + list.map(c => {
-          const a = allA[c], locked = ((state.weekData[state.scope] || {})[c] || {}).locked;
-          const warns = a.warnings.concat(probationNotices(c));
-          return `<div class="card" style="margin-bottom:12px">
+function viewControl(codes, allA){
+  const list = state.session.role==='admin' ? codes : [state.session.entity];
+  return `<p class="sm mut" style="margin-bottom:12px">Ngưỡng: tối đa ${state.settings.maxDay}h/người/ngày · ${state.settings.maxWeek}h/người/tuần · phát hiện trùng ca, khung giờ trống ${fmtH(OPEN_H)}–${fmtH(CLOSE_H)} và hạn thử việc.</p>`
+  + list.map(c=>{
+    const a=allA[c], locked=((state.weekData[state.scope]||{})[c]||{}).locked;
+    const warns = a.warnings.concat(probationNotices(c));
+    return `<div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <b>${esc(c)}</b><span class="mut xs">${esc(pool()[c].name !== c ? pool()[c].name : '')}</span>
-        <span class="pill ${locked ? 'pill-lock' : 'pill-open'}">${locked ? 'Đã khóa' : 'Đang mở'}</span>
-        <span class="xs mut" style="margin-left:auto">${warns.length === 0 ? 'Không có cảnh báo' : warns.length + ' cảnh báo'}</span>
+        <b>${esc(c)}</b><span class="mut xs">${esc(pool()[c].name!==c?pool()[c].name:'')}</span>
+        <span class="pill ${locked?'pill-lock':'pill-open'}">${locked?'Đã khóa':'Đang mở'}</span>
+        <span class="xs mut" style="margin-left:auto">${warns.length===0?'Không có cảnh báo':warns.length+' cảnh báo'}</span>
       </div>
-      ${warns.map(w => `<div class="warnitem ${w.type === 'gap' ? 'soft' : 'hard'}"><span>${w.type === 'gap' ? '◌' : '⚠'}</span>${esc(w.msg)}</div>`).join('')}
+      ${warns.map(w=>`<div class="warnitem ${w.type==='gap'?'soft':'hard'}"><span>${w.type==='gap'?'◌':'⚠'}</span>${esc(w.msg)}</div>`).join('')}
     </div>`;
-        }).join('');
-    }
+  }).join('');
+}
 
-    function viewReport(codes, allA) {
-      const scope = state.reportScope || (state.session.role === 'admin' ? 'ALL' : state.session.entity);
-      const inScope = scope === 'ALL' ? codes : [scope];
-      const heat = [];
-      for (let di = 0; di < 7; di++) {
-        const row = [];
-        for (let h = 0; h < CLOSE_H - OPEN_H; h++) row.push(inScope.reduce((a, c) => a + ((allA[c].coverage[di] || [])[h] || 0), 0));
-        heat.push(row);
-      }
-      const max = Math.max(1, ...heat.flat());
-      const empRows = inScope.flatMap(c => Object.entries(allA[c].weekTotal).map(([name, hrs]) => ({ e: c, name, hrs }))).sort((a, b) => b.hrs - a.hrs);
-      return `
-  ${state.session.role === 'admin' ? `<select onchange="setReportScope(this.value)" style="margin-bottom:14px"><option value="ALL" ${scope === 'ALL' ? 'selected' : ''}>Tất cả ${state.scope === 'region' ? 'khu vực' : 'cửa hàng'}</option>${codes.map(c => `<option ${c === scope ? 'selected' : ''}>${c}</option>`).join('')}</select>` : ''}
+function viewReport(codes, allA){
+  const scope = state.reportScope || (state.session.role==='admin' ? 'ALL' : state.session.entity);
+  const inScope = scope==='ALL' ? codes : [scope];
+  const heat=[];
+  for (let di=0; di<7; di++){
+    const row=[];
+    for (let h=0; h<CLOSE_H-OPEN_H; h++) row.push(inScope.reduce((a,c)=>a+((allA[c].coverage[di]||[])[h]||0),0));
+    heat.push(row);
+  }
+  const max = Math.max(1, ...heat.flat());
+  const empRows = inScope.flatMap(c=>Object.entries(allA[c].weekTotal).map(([name,hrs])=>({e:c,name,hrs}))).sort((a,b)=>b.hrs-a.hrs);
+  return `
+  ${state.session.role==='admin'?`<select onchange="setReportScope(this.value)" style="margin-bottom:14px"><option value="ALL" ${scope==='ALL'?'selected':''}>Tất cả ${state.scope==='region'?'khu vực':'cửa hàng'}</option>${codes.map(c=>`<option ${c===scope?'selected':''}>${c}</option>`).join('')}</select>`:''}
   <div class="card" style="margin-bottom:16px">
     <h3 style="margin-bottom:2px">Độ phủ nhân sự theo giờ</h3>
-    <p class="xs mut" style="margin-bottom:10px">Số người trực mỗi khung giờ · ${weekLabel(state.week)} (${fmtDMY(state.week)} – ${fmtDMY(addDays(state.week, 6))}). Ô viền đứt = không ai trực.</p>
+    <p class="xs mut" style="margin-bottom:10px">Số người trực mỗi khung giờ · ${weekLabel(state.week)} (${fmtDMY(state.week)} – ${fmtDMY(addDays(state.week,6))}). Ô viền đứt = không ai trực.</p>
     <div style="overflow-x:auto"><table style="font-size:11px">
-      <tr><td></td>${Array.from({ length: CLOSE_H - OPEN_H }, (_, i) => `<td class="mut" style="text-align:center;padding:2px">${OPEN_H + i}h</td>`).join('')}</tr>
-      ${DAYS.map((d, di) => `<tr><td class="mut" style="padding-right:8px;white-space:nowrap">${d}</td>${heat[di].map(v => `<td style="padding:2px"><div class="heat" style="${v === 0 ? 'border:1px dashed #e7e5e4;background:#fff' : 'background:rgba(159,18,57,' + (0.12 + 0.75 * v / max) + ');color:' + (v / max > 0.55 ? '#fff' : '#44403c')}">${v || ''}</div></td>`).join('')}</tr>`).join('')}
+      <tr><td></td>${Array.from({length:CLOSE_H-OPEN_H},(_,i)=>`<td class="mut" style="text-align:center;padding:2px">${OPEN_H+i}h</td>`).join('')}</tr>
+      ${DAYS.map((d,di)=>`<tr><td class="mut" style="padding-right:8px;white-space:nowrap">${d}</td>${heat[di].map(v=>`<td style="padding:2px"><div class="heat" style="${v===0?'border:1px dashed #e7e5e4;background:#fff':'background:rgba(159,18,57,'+(0.12+0.75*v/max)+');color:'+(v/max>0.55?'#fff':'#44403c')}">${v||''}</div></td>`).join('')}</tr>`).join('')}
     </table></div>
   </div>
-  ${state.session.role === 'admin' && scope === 'ALL' ? `
+  ${state.session.role==='admin' && scope==='ALL' ? `
   <div class="card" style="margin-bottom:16px">
     <h3>Tổng giờ công theo ngày</h3>
     <div style="overflow-x:auto"><table class="report-table" style="min-width:640px">
-      <tr><th>${state.scope === 'region' ? 'Khu vực' : 'Cửa hàng'}</th>${DAYS.map(d => `<th style="text-align:center">${d}</th>`).join('')}<th style="text-align:center">Tuần</th></tr>
-      ${codes.map(c => {
-        const days = DAYS.map((_, di) => Math.round(Object.values(allA[c].dayPersonHours[di] || {}).reduce((a, b) => a + b, 0) * 100) / 100);
-        return `<tr><td><b>${esc(c)}</b></td>${days.map(v => `<td style="text-align:center">${v || '·'}</td>`).join('')}<td style="text-align:center"><b>${Math.round(days.reduce((a, b) => a + b, 0) * 100) / 100}h</b></td></tr>`;
+      <tr><th>${state.scope==='region'?'Khu vực':'Cửa hàng'}</th>${DAYS.map(d=>`<th style="text-align:center">${d}</th>`).join('')}<th style="text-align:center">Tuần</th></tr>
+      ${codes.map(c=>{
+        const days = DAYS.map((_,di)=>Math.round(Object.values(allA[c].dayPersonHours[di]||{}).reduce((a,b)=>a+b,0)*100)/100);
+        return `<tr><td><b>${esc(c)}</b></td>${days.map(v=>`<td style="text-align:center">${v||'·'}</td>`).join('')}<td style="text-align:center"><b>${Math.round(days.reduce((a,b)=>a+b,0)*100)/100}h</b></td></tr>`;
       }).join('')}
     </table></div>
-  </div>`: ''}
+  </div>`:''}
   <div class="card">
     <h3>Tổng giờ tuần theo nhân viên</h3>
-    ${empRows.length === 0 ? '<p class="sm mut">Chưa có ca nào được xếp.</p>' : `
+    ${empRows.length===0?'<p class="sm mut">Chưa có ca nào được xếp.</p>':`
     <table class="report-table" style="max-width:460px">
-      <tr><th>Nhân viên</th><th>${state.scope === 'region' ? 'Khu vực' : 'Cửa hàng'}</th><th style="text-align:right">Giờ/tuần</th></tr>
-      ${empRows.map(r => `<tr><td>${esc(r.name)}</td><td class="mut">${esc(r.e)}</td><td style="text-align:right"><b>${r.hrs}h</b></td></tr>`).join('')}
+      <tr><th>Nhân viên</th><th>${state.scope==='region'?'Khu vực':'Cửa hàng'}</th><th style="text-align:right">Giờ/tuần</th></tr>
+      ${empRows.map(r=>`<tr><td>${esc(r.name)}</td><td class="mut">${esc(r.e)}</td><td style="text-align:right"><b>${r.hrs}h</b></td></tr>`).join('')}
     </table>`}
   </div>`;
-    }
+}
 
-    function viewAdmin(codes) {
-      return `
+function viewAdmin(codes){
+  return `
   <div class="card" style="margin-bottom:16px">
     <h3>Ngưỡng kiểm soát & PIN quản trị</h3>
     <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
@@ -1969,33 +1241,32 @@
   </div>
   <div class="card">
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
-      <h3 style="margin:0">Khóa lịch ${weekLabel(state.week)} · ${state.scope === 'region' ? 'khu vực' : 'cửa hàng'}</h3>
+      <h3 style="margin:0">Khóa lịch ${weekLabel(state.week)} · ${state.scope==='region'?'khu vực':'cửa hàng'}</h3>
       <button class="btn btn-sm" style="background:#b91c1c;color:#fff" onclick="doLockAll(true)">Khóa tất cả</button>
       <button class="btn btn-line btn-sm" onclick="doLockAll(false)">Mở tất cả</button>
     </div>
-    ${codes.map(c => {
-        const lk = ((state.weekData[state.scope] || {})[c] || {}).locked;
-        return `<button class="storechip ${lk ? 'lk' : 'op'}" onclick="doToggleLock('${esc(c)}')">${esc(c)} · ${lk ? 'khóa' : 'mở'}</button>`;
-      }).join('')}
+    ${codes.map(c=>{
+      const lk = ((state.weekData[state.scope]||{})[c]||{}).locked;
+      return `<button class="storechip ${lk?'lk':'op'}" onclick="doToggleLock('${esc(c)}')">${esc(c)} · ${lk?'khóa':'mở'}</button>`;
+    }).join('')}
   </div>`;
-    }
+}
 
-    document.addEventListener('click', (e) => {
-      if (state.calOpen && !e.target.closest('.weeknav')) { state.calOpen = false; render(); }
-    });
-    /* Phím tắt copy/paste kiểu bảng tính */
-    document.addEventListener('keydown', (e) => {
-      if (!state.session || state.tab !== 'lich' || state.qOpen) return;
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-      if (!state.selCell) return;
-      const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && k === 'c') { e.preventDefault(); copyCell(); }
-      else if ((e.ctrlKey || e.metaKey) && k === 'v') { e.preventDefault(); pasteCell(); }
-      else if (k === 'delete' || k === 'backspace') { e.preventDefault(); clearCell(); }
-      else if (k === 'escape') { state.selCell = null; render(); }
-    });
-    render();
-  </script>
+document.addEventListener('click', (e) => {
+  if (state.calOpen && !e.target.closest('.weeknav')) { state.calOpen=false; render(); }
+});
+/* Phím tắt copy/paste kiểu bảng tính */
+document.addEventListener('keydown', (e) => {
+  if (!state.session || state.tab!=='lich' || state.qOpen) return;
+  if (e.target.tagName==='INPUT' || e.target.tagName==='TEXTAREA' || e.target.tagName==='SELECT') return;
+  if (!state.selCell) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey||e.metaKey) && k==='c'){ e.preventDefault(); copyCell(); }
+  else if ((e.ctrlKey||e.metaKey) && k==='v'){ e.preventDefault(); pasteCell(); }
+  else if (k==='delete' || k==='backspace'){ e.preventDefault(); clearCell(); }
+  else if (k==='escape'){ state.selCell=null; render(); }
+});
+render();
+</script>
 </body>
-
 </html>
