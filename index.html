@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>JM Lịch làm việc</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,6 +82,7 @@ main{padding:18px;max-width:1100px;margin:0 auto}
 .tag{display:inline-block;font-size:11px;background:#e7e5e4;color:#292524;border-radius:6px;padding:1px 7px;margin:1px;font-weight:500}
 .tag.mgr{background:var(--rose-soft);color:var(--rose)}
 .tag.tv{background:var(--warn-soft);color:var(--warn)}
+.tag.offt{background:#e0e7ff;color:#3730a3}
 .totrow td{background:#fafaf9;font-weight:600;text-align:center;padding:9px 6px}
 .totrow td:first-child{text-align:left;padding-left:14px}
 .warnitem{padding:8px 12px;border-radius:9px;margin-top:6px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
@@ -161,6 +163,7 @@ kbd{font-family:inherit;font-size:10px;background:var(--paper);border:1px solid 
    CẤU HÌNH — sửa 2 dòng này khi nối Google Sheets
    API_URL = '' → CHẾ ĐỘ THỬ NGHIỆM (lưu trên máy này)
 ============================================================ */
+const APP_VERSION = 'v7.1';
 const CONFIG = { API_URL: 'https://jm-lich-api-616645882793.asia-southeast1.run.app', TOKEN: 'JM2026' };
 
 const DAYS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
@@ -240,6 +243,8 @@ function slotScopeOf(code){
   return grp==='tinh' ? 'store_tinh' : 'store_tp';
 }
 function curSlots(){ return state.slots[slotScopeOf(activeEntity())] || []; }
+const OFF_SLOT = {id:'OFF', label:'Off tuần', start:'00:00', end:'00:00', role:'Nghỉ'};
+function getSlot(slotId){ return slotId==='OFF' ? OFF_SLOT : curSlots().find(s=>s.id===slotId); }
 function activeEntity(){ return state.session.role==='admin' ? state.curEntity : state.session.entity; }
 function entData(){ return (state.weekData[state.scope]||{})[activeEntity()] || {assign:{}, locked:false}; }
 function rosterOf(code){ return ((pool()[code]||{}).roster)||[]; }
@@ -416,7 +421,33 @@ function analyze(assign, slots, settings){
   }
   Object.keys(weekTotal).forEach(name=>{ if (weekTotal[name] > settings.maxWeek)
     warnings.push({type:'week',name,msg:name+' làm '+weekTotal[name]+'h/tuần (vượt '+settings.maxWeek+'h/tuần)'}); });
-  return {warnings, weekTotal, dayPersonHours, coverage};
+
+  /* ---- Off tuần: 0 giờ, kiểm tra mâu thuẫn và ngày nghỉ ---- */
+  const offByDay = {};
+  const offAssign = (assign && assign.OFF) || {};
+  Object.keys(offAssign).forEach(di => {
+    offByDay[di] = (offAssign[di]||[]).map(x => (x && typeof x==='object') ? x.n : x);
+  });
+  for (let di=0; di<7; di++){
+    (offByDay[di]||[]).forEach(name => {
+      if ((dayPersonHours[di]||{})[name])
+        warnings.push({type:'offconflict', di, name,
+          msg:name+' vừa Off vừa có ca làm trong '+DAYS[di]+' — chọn một trong hai'});
+    });
+  }
+  // Người làm >= 6 ngày mà chưa có ngày Off nào -> nhắc; đủ 7 ngày -> cảnh báo mạnh
+  const offDays = {};
+  Object.values(offByDay).forEach(list => list.forEach(n => { offDays[n]=(offDays[n]||0)+1; }));
+  const workedDays = {};
+  for (let di=0; di<7; di++)
+    Object.keys(dayPersonHours[di]||{}).forEach(n => { workedDays[n]=(workedDays[n]||0)+1; });
+  Object.keys(workedDays).forEach(n => {
+    if (workedDays[n] >= 7)
+      warnings.push({type:'norest', name:n, msg:n+' làm đủ 7 ngày/tuần, không có ngày nghỉ — vi phạm tối thiểu 1 ngày nghỉ/tuần'});
+    else if (workedDays[n] >= 6 && !offDays[n])
+      warnings.push({type:'gap', name:n, msg:n+' làm '+workedDays[n]+' ngày nhưng chưa xếp ngày Off tuần'});
+  });
+  return {warnings, weekTotal, dayPersonHours, coverage, offByDay};
 }
 function probationNotices(code){
   const out=[];
@@ -454,6 +485,7 @@ async function mutate(action, payload, okMsg){
 /* ---------------- Hành động ---------------- */
 window.doLoginStore = async function(){
   const code=$('lg-store').value, pin=$('lg-pin').value;
+  if (!code) return alert('Danh sách cửa hàng đang tải — đợi vài giây rồi thử lại (hoặc F5).');
   try{ await api('login',{role:'store',code,pin}); state.session={role:'store',entity:code,pin}; state.scope='store'; state.curEntity=code; await loadWeek(); }
   catch(e){ alert(e.message); }
 };
@@ -486,8 +518,8 @@ window.saveCell = () => {
   const prev = cellItems(slotId, di);
   const items = names.map(n => { const old = prev.find(it=>it.n===n); return {n, h: old?old.h:''}; });
   writeCell(slotId, di, items);
-  // QLV: người mới chưa gán cửa hàng -> hỏi ngay
-  if (state.scope==='region'){
+  // QLV: người mới chưa gán cửa hàng -> hỏi ngay (trừ hàng Off)
+  if (state.scope==='region' && slotId!=='OFF'){
     const need = items.find(it => !it.h);
     if (need) setTimeout(()=>openRegionCell(slotId, di, need.n), 60);
   }
@@ -537,8 +569,8 @@ window.pickBrush = (n) => { state.brush = (state.brush===n) ? null : n; render()
 window.paintCell = (slotId, di) => {
   if (!state.brush) { state.saveMsg='err:Chọn một tên ở bảng trên trước, rồi nhấn vào ô.'; render(); return; }
   if (state.brush === '__ERASE__') return writeCell(slotId, di, []);
-  // QLV: cần biết đi store nào -> mở popup chọn store thay vì tô thẳng
-  if (state.scope==='region'){ openRegionCell(slotId, di, state.brush); return; }
+  // QLV: cần biết đi store nào -> mở popup chọn store (trừ hàng Off — nghỉ thì không đi đâu)
+  if (state.scope==='region' && slotId!=='OFF'){ openRegionCell(slotId, di, state.brush); return; }
   const cur = cellItems(slotId, di);
   const k = cur.findIndex(it=>it.n===state.brush);
   if (k >= 0) cur.splice(k, 1); else cur.push({n:state.brush, h:''});
@@ -552,7 +584,7 @@ window.dropCell = (e, slotId, di) => {
   e.preventDefault(); e.currentTarget.classList.remove('dragover');
   const n = e.dataTransfer.getData('text/plain');
   if (!n) return;
-  if (state.scope==='region'){ openRegionCell(slotId, di, n); return; }
+  if (state.scope==='region' && slotId!=='OFF'){ openRegionCell(slotId, di, n); return; }
   const cur = cellItems(slotId, di);
   if (!cur.some(it=>it.n===n)) { cur.push({n, h:''}); writeCell(slotId, di, cur); }
 };
@@ -589,9 +621,11 @@ function qMatches(txt){
   return names.filter(n => n.toLowerCase().includes(lastL)).slice(0, 8);
 }
 function qNamePool(){
-  const slot = curSlots().find(s=>s.id===(state.qOpen||{}).slotId);
+  const sid = (state.qOpen||{}).slotId;
+  const slot = getSlot(sid);
   const roster = rosterOf(activeEntity()).map(r=>r.name);
-  return (state.scope==='store' && slot && slot.role===MGR) ? [MGR].concat(roster) : roster;
+  const withMgr = state.scope==='store' && slot && (slot.role===MGR || sid==='OFF');
+  return withMgr ? [MGR].concat(roster) : roster;
 }
 window.qInputChanged = () => { state.qSug = -1; renderSugg(); };
 function renderSugg(){
@@ -647,7 +681,7 @@ window.qCommit = (moveNext, dir) => {
   const {slotId, di} = state.qOpen;
   const pool = qNamePool();
   const raw = el.value.split(',').map(x=>x.trim()).filter(Boolean);
-  const isRegion = state.scope==='region';
+  const isRegion = state.scope==='region' && slotId!=='OFF';
   const namemap = {}; rosterOf(activeEntity()).forEach(r=>namemap[r.name.toLowerCase()]=r.name);
   const items = [], bad = [];
   const seen = {};
@@ -950,21 +984,23 @@ function viewCalendar(){
 }
 
 function viewLogin(){
-  const scodes = Object.keys(state.stores).length ? Object.keys(state.stores) : Object.keys(SEED);
-  const rcodes = Object.keys(state.regions).length ? Object.keys(state.regions) : Object.keys(DEFAULT_REGIONS);
+  const loaded = Object.keys(state.stores).length > 0;
+  const scodes = loaded ? Object.keys(state.stores).sort() : (state.demo ? Object.keys(SEED) : []);
+  const rcodes = Object.keys(state.regions).length ? Object.keys(state.regions).sort() : (state.demo ? Object.keys(DEFAULT_REGIONS) : []);
   return `<div class="login-wrap"><div class="login-box">
     <h1 style="color:#fafaf9;font-size:23px">JM <span style="color:#fda4af">Lịch làm việc</span></h1>
-    <p class="sm" style="color:#a8a29e;margin:4px 0 18px">TTKD Offline — nhập lịch, kiểm soát giờ công, báo cáo${state.demo?' · <b>chế độ thử nghiệm (chưa nối Google Sheets)</b>':''}</p>
+    <p class="sm" style="color:#a8a29e;margin:4px 0 18px">TTKD Offline — nhập lịch, kiểm soát giờ công, báo cáo</p>
+    ${state.demo?'<div style="background:#7f1d1d;color:#fecaca;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px"><b>⚠ Bản cũ trong bộ nhớ đệm — CHƯA nối hệ thống.</b> Lịch nhập ở đây sẽ KHÔNG được lưu. Vui lòng tải lại trang (xóa cache trình duyệt) để lấy bản mới.</div>':''}
     <div class="login-grid">
       <div class="card">
         <h3>Cửa hàng</h3>
-        <select id="lg-store" class="field">${scodes.map(c=>`<option>${c}</option>`).join('')}</select>
+        <select id="lg-store" class="field">${scodes.length ? scodes.map(c=>`<option>${c}</option>`).join('') : '<option value="">Đang tải danh sách…</option>'}</select>
         <input id="lg-pin" class="field" type="password" placeholder="Mã PIN cửa hàng" onkeydown="if(event.key==='Enter')doLoginStore()">
         <button class="btn btn-dark" style="width:100%" onclick="doLoginStore()">Vào nhập lịch</button>
       </div>
       <div class="card">
         <h3>Quản lý vùng</h3>
-        <select id="lg-region" class="field">${rcodes.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>
+        <select id="lg-region" class="field">${rcodes.length ? rcodes.map(c=>`<option value="${c}">${c}</option>`).join('') : '<option value="">Đang tải danh sách…</option>'}</select>
         <input id="lg-rpin" class="field" type="password" placeholder="Mã PIN khu vực" onkeydown="if(event.key==='Enter')doLoginRegion()">
         <button class="btn" style="width:100%;background:var(--blue);color:#fff" onclick="doLoginRegion()">Vào lịch vùng</button>
       </div>
@@ -973,6 +1009,7 @@ function viewLogin(){
         <input id="lg-apin" class="field" type="password" placeholder="Mã PIN quản trị" onkeydown="if(event.key==='Enter')doLoginAdmin()">
         <button class="btn btn-rose" style="width:100%" onclick="doLoginAdmin()">Vào quản trị</button>
         <p class="xs mut" style="margin-top:10px">Lần đầu: PIN cửa hàng 1111, khu vực 2222, quản trị 0000 — đổi ngay sau khi vào.</p>
+        <p class="xs" style="color:#57534e;margin-top:6px">Phiên bản ${APP_VERSION}${state.demo?' · demo':''}</p>
       </div>
     </div>
   </div></div>`;
@@ -1077,6 +1114,33 @@ function viewGrid(sw, a, slots, canEdit, locked){
         return `<th style="${isToday?'color:var(--rose)':''}">${d}<div class="xs" style="font-weight:${isToday?'700':'400'};color:${isToday?'var(--rose)':'var(--mut)'}">${fmtDM(ds)}</div></th>`;
       }).join('')}</tr></thead>
       <tbody>${rows}
+      ${(function(){
+        let tds='';
+        DAYS.forEach((_,di)=>{
+          const items = (assign['OFF']||{})[String(di)]||[];
+          const names = items.map(x=>(x&&typeof x==='object')?x.n:x);
+          const bad = a.warnings.some(w=>w.type==='offconflict' && w.di===di && names.includes(w.name));
+          let handler='', cls='';
+          if (!canEdit) handler='disabled';
+          else if (mode==='paint'){ cls='paint'; handler=`onclick="paintCell('OFF',${di})"`; }
+          else if (mode==='type') handler=`onclick="openQ('OFF',${di})"`;
+          else handler=`onclick="openCell('OFF',${di})"`;
+          const isQ = state.qOpen && state.qOpen.slotId==='OFF' && state.qOpen.di===di;
+          if (canEdit && mode==='type' && isQ){
+            tds += `<td><div class="qwrap"><textarea id="q-input" class="qinput" rows="2" placeholder="Gõ tên người nghỉ" oninput="qInputChanged()" onkeydown="qKey(event)" onblur="setTimeout(()=>{if(state.qOpen)qCommit(false)},150)">${esc(names.join(', '))}</textarea><div class="sugg" id="q-sugg"></div></div></td>`;
+            return;
+          }
+          const dnd = canEdit ? `ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropCell(event,'OFF',${di})" oncontextmenu="event.preventDefault();selectCell(event,'OFF',${di})"` : '';
+          const isSel = state.selCell && state.selCell.slotId==='OFF' && state.selCell.di===di;
+          tds += `<td><button class="cell ${names.length?'':'empty'} ${bad?'warn':''} ${cls} ${isSel?'sel':''} ${canEdit&&mode==='click'?'canedit':''}" ${handler} ${dnd}>
+            ${names.length ? names.map(n=>{
+              const x = (canEdit && (mode==='paint'||mode==='click')) ? `<span class="x" onclick="delName(event,'OFF',${di},'${esc(n)}')">×</span>` : '';
+              return `<span class="tag offt">${esc(n)}${x}</span>`;
+            }).join('') : `<span class="xs" style="color:#d6d3d1">${canEdit?(mode==='paint'?'nhấn để tô':'+ nghỉ'):'—'}</span>`}
+          </button></td>`;
+        });
+        return `<tr class="sep"><td class="slotinfo"><b>Off tuần</b><div class="xs mut">Nghỉ · 0h</div></td>${tds}</tr>`;
+      })()}
       <tr class="totrow sep"><td>Tổng giờ công/ngày</td>${dayTotals.map(t=>`<td>${t}h</td>`).join('')}</tr></tbody>
     </table></div>
     <p class="xs mut" style="margin-top:8px">Thẻ vàng ⋆ = đang thử việc · ô nền đỏ = trùng giờ hoặc vượt giờ · nhấn × trên thẻ tên để bỏ người khỏi ca.</p>`;
@@ -1084,10 +1148,10 @@ function viewGrid(sw, a, slots, canEdit, locked){
 
 function viewCellModal(sw, slots){
   const {slotId,di} = state.editCell;
-  const slot = slots.find(s=>s.id===slotId);
+  const slot = getSlot(slotId);
   if (!slot) return '';
   const roster = rosterOf(activeEntity());
-  const options = (state.scope==='store' && slot.role===MGR) ? [{name:MGR}].concat(roster) : roster;
+  const options = (state.scope==='store' && (slot.role===MGR || slotId==='OFF')) ? [{name:MGR}].concat(roster) : roster;
   const current = (sw.assign[slotId]||{})[String(di)] || [];
   return `<div class="modal-bg" onclick="closeCell()"><div class="modal" onclick="event.stopPropagation()">
     <h3 style="margin-bottom:2px">${DAYS[di]} ${fmtDM(addDays(state.week,di))} · ca ${esc(slot.label)}</h3>
@@ -1380,6 +1444,18 @@ document.addEventListener('keydown', (e) => {
   else if (k==='escape'){ state.selCell=null; render(); }
 });
 render();
+/* Nạp danh sách cửa hàng/khu vực thật cho màn đăng nhập */
+(async function initBoot(){
+  if (state.demo) return;
+  try{
+    const r = await api('bootstrap');
+    state.stores = r.stores || {};
+    state.regions = r.regions || {};
+  }catch(e){
+    state.saveMsg = 'err:Không tải được danh sách cửa hàng — kiểm tra mạng rồi bấm F5';
+  }
+  if (!state.session) render();
+})();
 </script>
 </body>
 </html>
