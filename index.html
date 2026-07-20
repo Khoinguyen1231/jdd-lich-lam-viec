@@ -244,7 +244,9 @@ const state = {
   qOpen: null,            // {slotId,di} — ô đang gõ
   qSug: -1,
   regionCell: null,       // {slotId,di,name} — QLV đang chọn store để đi               // vị trí gợi ý đang chọn
-  slotTab: 'store_tp',    // bộ ca đang xem trong tab Ca làm: store_tp | store_tinh | region
+  slotTab: 'store_tp',    // bộ ca đang xem trong tab Ca làm: store_<gid> | region
+  groups: [],             // danh sách nhóm giờ (tp/tinh + nhóm tự tạo)
+  editGroup: null,        // đang mở modal thêm nhóm mới
 };
 function pool(){ return state.scope==='region' ? state.regions : state.stores; }
 /* Bộ ca của thực thể đang xem: region -> region; store -> theo grp (tp/tinh) */
@@ -284,7 +286,7 @@ function localDb(){
       store_hyn: DEFAULT_SLOTS_HYN.map(s=>Object.assign({},s)),
       region: DEFAULT_REGION_SLOTS.map(s=>Object.assign({},s))
     },
-    stores:{}, regions:{}, weeks:{store:{}, region:{}}
+    stores:{}, regions:{}, groups:[{id:'tp',name:'TP (HCM/HN)',builtin:true},{id:'tinh',name:'Tỉnh',builtin:true},{id:'hyn',name:'HYN01 (ca riêng)',builtin:true}], weeks:{store:{}, region:{}}
   };
   db.weeks.store[SEED_WEEK] = {};
   Object.keys(SEED).forEach(c => {
@@ -326,7 +328,7 @@ function localApi(action, p){
       const week = {store:{}, region:{}};
       Object.keys(db.stores).forEach(c => week.store[c] = ((db.weeks.store||{})[p.week]||{})[c] || {assign:{},locked:false});
       Object.keys(db.regions).forEach(c => week.region[c] = ((db.weeks.region||{})[p.week]||{})[c] || {assign:{},locked:false});
-      return {ok:1, settings:db.settings, slots:db.slots, stores, regions, week};
+      return {ok:1, settings:db.settings, slots:db.slots, groups:db.groups||[], stores, regions, week};
     }
     case 'setCell': {
       may(p.entity);
@@ -352,14 +354,41 @@ function localApi(action, p){
     case 'saveSlot': {
       if(!isAdmin) throw new Error('Chỉ quản trị được sửa ca làm việc.');
       if (toDec(p.slot.start) >= toDec(p.slot.end)) throw new Error('Giờ kết thúc phải sau giờ bắt đầu.');
+      if (!db.slots[p.scope]) db.slots[p.scope] = [];
       const list = db.slots[p.scope];
       const i = list.findIndex(x=>x.id===p.slot.id);
       if (i>=0) list[i] = Object.assign({}, list[i], p.slot);
       else {
-        const prefix = p.scope==='region'?'R':(p.scope==='store_tinh'?'T':(p.scope==='store_hyn'?'H':'S'));
-        let max=0; list.forEach(x=>{ max=Math.max(max, Number(String(x.id).slice(1))||0); });
+        // prefix duy nhất theo scope để id không đụng nhóm khác
+        const gid = p.scope.replace('store_','');
+        const prefix = p.scope==='region'?'R':(gid==='tp'?'S':(gid==='tinh'?'T':gid.slice(0,3).toUpperCase()+'-'));
+        let max=0; Object.values(db.slots).forEach(arr=>arr.forEach(x=>{
+          if (String(x.id).indexOf(prefix)===0){ const n=Number(String(x.id).replace(prefix,''))||0; max=Math.max(max,n); }
+        }));
         list.push(Object.assign({}, p.slot, {id: prefix+(max+1)}));
       }
+      localSave(db); return {ok:1};
+    }
+    case 'saveGroup': {
+      if(!isAdmin) throw new Error('Chỉ quản trị được tạo nhóm.');
+      const gid = String(p.group.id||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(!gid) throw new Error('Mã nhóm không hợp lệ.');
+      if(['tp','tinh','region','store'].includes(gid)) throw new Error('Mã đã dùng.');
+      db.groups = db.groups || [];
+      const i = db.groups.findIndex(g=>g.id===gid);
+      if (i>=0) db.groups[i].name = p.group.name||gid;
+      else db.groups.push({id:gid, name:p.group.name||gid, builtin:false});
+      if (!db.slots['store_'+gid]) db.slots['store_'+gid] = [];
+      localSave(db); return {ok:1, id:gid};
+    }
+    case 'removeGroup': {
+      if(!isAdmin) throw new Error('Chỉ quản trị được xóa nhóm.');
+      const gid = String(p.id||'').toLowerCase();
+      if(['tp','tinh'].includes(gid)) throw new Error('Không xóa được nhóm mặc định.');
+      const used = Object.keys(db.stores).filter(c=>(db.stores[c].grp||'tp')===gid);
+      if(used.length) throw new Error('Còn '+used.length+' cửa hàng thuộc nhóm ('+used[0]+'...). Chuyển sang nhóm khác trước.');
+      db.groups = (db.groups||[]).filter(g=>g.id!==gid);
+      delete db.slots['store_'+gid];
       localSave(db); return {ok:1};
     }
     case 'removeSlot': {
@@ -479,16 +508,17 @@ async function loadWeek(){
   try{
     const p = state.session || {};
     const r = await api('load', {week: state.week, pin: p.pin, role: p.role, scope: state.scope});
-    state.settings = r.settings; state.slots = r.slots;
+    state.settings = r.settings; state.slots = r.slots; state.groups = r.groups || [];
     state.stores = r.stores; state.regions = r.regions; state.weekData = r.week;
     if (!state.curEntity || !pool()[state.curEntity]) state.curEntity = Object.keys(pool())[0];
   }catch(e){ state.saveMsg = 'err:'+e.message; }
   state.loading = false; render();
 }
-async function mutate(action, payload, okMsg){
+async function mutate(action, payload, okMsg, after){
   state.saveMsg = 'ok:Đang lưu…'; render();
   try{
     await api(action, Object.assign({pin: state.session.pin, scope: state.scope}, payload));
+    if (after) after();
     await loadWeek();
     state.saveMsg = okMsg ? 'ok:'+okMsg : ''; render();
     setTimeout(()=>{ state.saveMsg=''; render(); }, 2000);
@@ -852,6 +882,21 @@ window.saveSlotForm = () => {
   state.editSlot = null;
   mutate('saveSlot', {slot, scope:state.slotTab}, 'Đã lưu ca '+slot.label);
 };
+window.openGroup = () => { state.editGroup = {id:'', name:''}; render(); };
+window.closeGroup = () => { state.editGroup = null; render(); };
+window.saveGroupForm = () => {
+  const name = $('gr-name').value.trim();
+  const id = ($('gr-id').value.trim() || name).toLowerCase().replace(/[^a-z0-9]/g,'');
+  if (!name) return alert('Nhập tên nhóm (VD: Aeon).');
+  if (!id) return alert('Mã nhóm phải có chữ hoặc số không dấu (VD: aeon).');
+  if (['tp','tinh','region','store'].includes(id)) return alert('Mã "'+id+'" đã dùng cho hệ thống, chọn mã khác.');
+  state.editGroup = null;
+  mutate('saveGroup', {group:{id, name}}, 'Đã tạo nhóm '+name, () => { state.slotTab = 'store_'+id; });
+};
+window.doDelGroup = (id, name) => {
+  if(!confirm('Xóa nhóm giờ "'+name+'"?\nChỉ xóa được khi không còn cửa hàng nào thuộc nhóm này.')) return;
+  mutate('removeGroup', {id}, 'Đã xóa nhóm '+name, () => { state.slotTab = 'store_tp'; });
+};
 window.doDelSlot = (id, label) => {
   if(!confirm('Xóa ca "'+label+'"? Ca sẽ ẩn khỏi lịch mới; dữ liệu lịch cũ vẫn giữ.')) return;
   mutate('removeSlot', {slotId:id, scope:state.slotTab}, 'Đã xóa ca '+label);
@@ -950,6 +995,7 @@ function render(){
   <main>${state.loading?'<p class="mut">Đang tải…</p>':body}</main>
   ${state.editCell ? viewCellModal(sw, slots) : ''}
   ${state.editSlot ? viewSlotModal() : ''}
+  ${state.editGroup ? viewGroupModal() : ''}
   ${state.regionCell ? viewRegionCellModal() : ''}`;
   if (state.tab==='nhansu' && $('emp-status')) toggleTVFields();
   if (state.qOpen && $('q-input')) renderSugg();
@@ -1181,27 +1227,42 @@ function viewCellModal(sw, slots){
 }
 
 /* ---- Tab Ca làm ---- */
+function groupList(){
+  // Nhóm mặc định + nhóm tự tạo (từ server hoặc demo)
+  return state.groups && state.groups.length ? state.groups
+    : [{id:'tp',name:'TP (HCM/HN)',builtin:true},{id:'tinh',name:'Tỉnh',builtin:true}];
+}
+function slotScopeLabel(scope){
+  if (scope==='region') return 'Quản lý vùng';
+  const gid = scope.replace('store_','');
+  const g = groupList().find(x=>x.id===gid);
+  return g ? ('Cửa hàng · '+g.name) : scope;
+}
 function viewSlots(){
   const scope = state.slotTab;
   const slots = state.slots[scope] || [];
-  const label = {store_tp:'Cửa hàng TP (HCM/HN)', store_tinh:'Cửa hàng Tỉnh', store_hyn:'HYN01 (ca riêng)', region:'Quản lý vùng'}[scope] || scope;
+  const groups = groupList();
+  const curGid = scope.replace('store_','');
+  const curGroup = groups.find(g=>g.id===curGid);
   return `
-  <div class="modebar" style="margin-bottom:12px">
+  <div class="modebar" style="margin-bottom:12px;flex-wrap:wrap">
     <span class="xs mut" style="font-weight:600">Bộ ca</span>
-    <div class="modetog">
-      <button class="${scope==='store_tp'?'on':''}" onclick="setSlotTab('store_tp')">Cửa hàng TP</button>
-      <button class="${scope==='store_tinh'?'on':''}" onclick="setSlotTab('store_tinh')">Cửa hàng Tỉnh</button>
-      <button class="${scope==='store_hyn'?'on':''}" onclick="setSlotTab('store_hyn')">HYN01 riêng</button>
+    <div class="modetog" style="flex-wrap:wrap">
+      ${groups.map(g=>`<button class="${scope==='store_'+g.id?'on':''}" onclick="setSlotTab('store_${g.id}')">${esc(g.name)}</button>`).join('')}
       <button class="${scope==='region'?'on':''}" onclick="setSlotTab('region')">Quản lý vùng</button>
     </div>
-    <span class="xs mut" style="margin-left:auto">Cửa hàng dùng bộ ca nào là do cột <b>Nhóm giờ</b> ở tab Cửa hàng quyết định.</span>
+    <button class="btn btn-line btn-sm" onclick="openGroup()">+ Nhóm giờ mới</button>
+    <span class="xs mut" style="width:100%;margin-top:4px">Mỗi cửa hàng dùng bộ ca của nhóm nó — gán nhóm ở tab <b>Cửa hàng</b>. Nhóm mới bắt đầu rỗng, anh tự thêm ca cho nó.</span>
   </div>
   <div class="card">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <h3 style="margin:0">Ca làm việc · ${label} <span class="mut xs" style="font-weight:400">· ${slots.length} ca</span></h3>
-      <button class="btn btn-dark btn-sm" style="margin-left:auto" onclick="openSlot('new')">+ Thêm ca</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <h3 style="margin:0">Ca làm việc · ${esc(slotScopeLabel(scope))} <span class="mut xs" style="font-weight:400">· ${slots.length} ca</span></h3>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        ${curGroup && !curGroup.builtin ? `<button class="btn btn-sm" style="color:var(--bad)" onclick="doDelGroup('${curGroup.id}','${esc(curGroup.name)}')">Xóa nhóm này</button>` : ''}
+        <button class="btn btn-dark btn-sm" onclick="openSlot('new')">+ Thêm ca</button>
+      </div>
     </div>
-    ${slots.length===0?'<p class="sm mut">Chưa có ca nào.</p>':`
+    ${slots.length===0?'<p class="sm mut">Chưa có ca nào cho nhóm này. Bấm <b>+ Thêm ca</b> để bắt đầu.</p>':`
     <div style="overflow-x:auto"><table class="report-table" style="min-width:600px">
       <tr><th>Tên ca</th><th>Bắt đầu</th><th>Kết thúc</th><th>Chức vụ</th><th style="text-align:right">Số giờ</th><th></th></tr>
       ${slots.map(s=>`<tr>
@@ -1240,6 +1301,18 @@ function viewRegionCellModal(){
   </div></div>`;
 }
 
+function viewGroupModal(){
+  return `<div class="modal-bg" onclick="closeGroup()"><div class="modal" onclick="event.stopPropagation()">
+    <h3>Thêm nhóm giờ mới</h3>
+    <p class="xs mut" style="margin-bottom:14px">Ví dụ nhóm "Aeon" cho các cửa hàng trong TTTM. Tạo xong, anh thêm ca cho nhóm rồi gán cửa hàng vào ở tab Cửa hàng.</p>
+    <label class="fld">Tên nhóm<input id="gr-name" placeholder="VD: Aeon" style="width:100%"></label>
+    <label class="fld" style="margin-top:10px">Mã nhóm (không dấu, tùy chọn)<input id="gr-id" placeholder="VD: aeon — để trống sẽ tự tạo từ tên" style="width:100%"></label>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-dark" style="flex:1" onclick="saveGroupForm()">Tạo nhóm</button>
+      <button class="btn btn-line" onclick="closeGroup()">Hủy</button>
+    </div>
+  </div></div>`;
+}
 function viewSlotModal(){
   const s = state.editSlot, isNew = !s.id;
   const scopeLabel = {store_tp:'Cửa hàng TP', store_tinh:'Cửa hàng Tỉnh', region:'Quản lý vùng'}[state.slotTab];
@@ -1277,10 +1350,8 @@ function viewEntities(){
           <option value="">— chưa gán —</option>
           ${rcodes.map(r=>`<option value="${r}" ${state.stores[c].region===r?'selected':''}>${r}</option>`).join('')}
         </select></td>
-        <td><select class="f-grp" style="width:130px">
-          <option value="tp" ${(state.stores[c].grp||'tp')==='tp'?'selected':''}>TP</option>
-          <option value="tinh" ${state.stores[c].grp==='tinh'?'selected':''}>Tỉnh</option>
-          <option value="hyn" ${state.stores[c].grp==='hyn'?'selected':''}>HYN01 riêng</option>
+        <td><select class="f-grp" style="width:150px">
+          ${groupList().map(g=>`<option value="${g.id}" ${(state.stores[c].grp||'tp')===g.id?'selected':''}>${esc(g.name)}</option>`).join('')}
         </select></td>
         <td><input class="f-pin" placeholder="(trống = giữ)" style="width:100px"></td>
         <td style="text-align:right">${(state.stores[c].roster||[]).length}</td>
@@ -1293,7 +1364,7 @@ function viewEntities(){
       <label class="fld">Mã cửa hàng mới<input id="st-code" placeholder="VD: JMHNI05" style="width:130px"></label>
       <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:150px"></label>
       <label class="fld">Khu vực<select id="st-region" style="width:110px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
-      <label class="fld">Nhóm giờ<select id="st-grp" style="width:140px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option><option value="hyn">HYN01 riêng</option></select></label>
+      <label class="fld">Nhóm giờ<select id="st-grp" style="width:150px">${groupList().map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select></label>
       <label class="fld">PIN<input id="st-pin" placeholder="1111" style="width:90px"></label>
       <button class="btn btn-dark" onclick="doAddStore()">+ Thêm cửa hàng</button>
     </div>
