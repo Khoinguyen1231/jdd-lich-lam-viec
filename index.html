@@ -189,6 +189,17 @@ const DEFAULT_SLOTS_TINH = [
   {id:'T6', label:'15h – 18h',     start:'15:00', end:'18:00', role:'Bán hàng'},
   {id:'T7', label:'18h – 22h',     start:'18:00', end:'22:00', role:'Bán hàng'}
 ];
+const DEFAULT_SLOTS_HYN = [
+  {id:'H1', label:'10h – 18h30',   start:'10:00', end:'18:30', role:'Quản lý'},
+  {id:'H2', label:'9h – 17h30',    start:'09:00', end:'17:30', role:'Quản lý'},
+  {id:'H3', label:'13h30 – 22h',   start:'13:30', end:'22:00', role:'Quản lý'},
+  {id:'H4', label:'8h30 – 17h',    start:'08:30', end:'17:00', role:'Quản lý'},
+  {id:'H5', label:'15h – 22h',     start:'15:00', end:'22:00', role:'Quản lý'},
+  {id:'H6', label:'8h30 – 12h30',  start:'08:30', end:'12:30', role:'Bán hàng'},
+  {id:'H7', label:'12h30 – 15h30', start:'12:30', end:'15:30', role:'Bán hàng'},
+  {id:'H8', label:'15h – 18h',     start:'15:00', end:'18:00', role:'Bán hàng'},
+  {id:'H9', label:'18h – 22h',     start:'18:00', end:'22:00', role:'Bán hàng'}
+];
 const DEFAULT_SLOTS = DEFAULT_SLOTS_TP;
 const DEFAULT_REGION_SLOTS = [
   {id:'R1', label:'Ghé cửa hàng sáng',  start:'09:00', end:'12:00', role:'Quản lý vùng'},
@@ -240,7 +251,7 @@ function pool(){ return state.scope==='region' ? state.regions : state.stores; }
 function slotScopeOf(code){
   if (state.scope==='region') return 'region';
   const grp = (state.stores[code]||{}).grp || 'tp';
-  return grp==='tinh' ? 'store_tinh' : 'store_tp';
+  return 'store_' + grp;   // tp->store_tp, tinh->store_tinh, hyn->store_hyn...
 }
 function curSlots(){ return state.slots[slotScopeOf(activeEntity())] || []; }
 const OFF_SLOT = {id:'OFF', label:'Off tuần', start:'00:00', end:'00:00', role:'Nghỉ'};
@@ -270,6 +281,7 @@ function localDb(){
     slots:{
       store_tp: DEFAULT_SLOTS_TP.map(s=>Object.assign({},s)),
       store_tinh: DEFAULT_SLOTS_TINH.map(s=>Object.assign({},s)),
+      store_hyn: DEFAULT_SLOTS_HYN.map(s=>Object.assign({},s)),
       region: DEFAULT_REGION_SLOTS.map(s=>Object.assign({},s))
     },
     stores:{}, regions:{}, weeks:{store:{}, region:{}}
@@ -344,7 +356,7 @@ function localApi(action, p){
       const i = list.findIndex(x=>x.id===p.slot.id);
       if (i>=0) list[i] = Object.assign({}, list[i], p.slot);
       else {
-        const prefix = p.scope==='region'?'R':(p.scope==='store_tinh'?'T':'S');
+        const prefix = p.scope==='region'?'R':(p.scope==='store_tinh'?'T':(p.scope==='store_hyn'?'H':'S'));
         let max=0; list.forEach(x=>{ max=Math.max(max, Number(String(x.id).slice(1))||0); });
         list.push(Object.assign({}, p.slot, {id: prefix+(max+1)}));
       }
@@ -1172,13 +1184,14 @@ function viewCellModal(sw, slots){
 function viewSlots(){
   const scope = state.slotTab;
   const slots = state.slots[scope] || [];
-  const label = {store_tp:'Cửa hàng TP (HCM/HN)', store_tinh:'Cửa hàng Tỉnh', region:'Quản lý vùng'}[scope];
+  const label = {store_tp:'Cửa hàng TP (HCM/HN)', store_tinh:'Cửa hàng Tỉnh', store_hyn:'HYN01 (ca riêng)', region:'Quản lý vùng'}[scope] || scope;
   return `
   <div class="modebar" style="margin-bottom:12px">
     <span class="xs mut" style="font-weight:600">Bộ ca</span>
     <div class="modetog">
       <button class="${scope==='store_tp'?'on':''}" onclick="setSlotTab('store_tp')">Cửa hàng TP</button>
       <button class="${scope==='store_tinh'?'on':''}" onclick="setSlotTab('store_tinh')">Cửa hàng Tỉnh</button>
+      <button class="${scope==='store_hyn'?'on':''}" onclick="setSlotTab('store_hyn')">HYN01 riêng</button>
       <button class="${scope==='region'?'on':''}" onclick="setSlotTab('region')">Quản lý vùng</button>
     </div>
     <span class="xs mut" style="margin-left:auto">Cửa hàng dùng bộ ca nào là do cột <b>Nhóm giờ</b> ở tab Cửa hàng quyết định.</span>
@@ -1267,6 +1280,7 @@ function viewEntities(){
         <td><select class="f-grp" style="width:130px">
           <option value="tp" ${(state.stores[c].grp||'tp')==='tp'?'selected':''}>TP</option>
           <option value="tinh" ${state.stores[c].grp==='tinh'?'selected':''}>Tỉnh</option>
+          <option value="hyn" ${state.stores[c].grp==='hyn'?'selected':''}>HYN01 riêng</option>
         </select></td>
         <td><input class="f-pin" placeholder="(trống = giữ)" style="width:100px"></td>
         <td style="text-align:right">${(state.stores[c].roster||[]).length}</td>
@@ -1279,7 +1293,7 @@ function viewEntities(){
       <label class="fld">Mã cửa hàng mới<input id="st-code" placeholder="VD: JMHNI05" style="width:130px"></label>
       <label class="fld">Tên hiển thị<input id="st-name" placeholder="(để trống = dùng mã)" style="width:150px"></label>
       <label class="fld">Khu vực<select id="st-region" style="width:110px"><option value="">— chưa gán —</option>${rcodes.map(r=>`<option value="${r}">${r}</option>`).join('')}</select></label>
-      <label class="fld">Nhóm giờ<select id="st-grp" style="width:140px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option></select></label>
+      <label class="fld">Nhóm giờ<select id="st-grp" style="width:140px"><option value="tp">TP (HCM/HN)</option><option value="tinh">Tỉnh</option><option value="hyn">HYN01 riêng</option></select></label>
       <label class="fld">PIN<input id="st-pin" placeholder="1111" style="width:90px"></label>
       <button class="btn btn-dark" onclick="doAddStore()">+ Thêm cửa hàng</button>
     </div>
