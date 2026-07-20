@@ -163,7 +163,7 @@ kbd{font-family:inherit;font-size:10px;background:var(--paper);border:1px solid 
    CẤU HÌNH — sửa 2 dòng này khi nối Google Sheets
    API_URL = '' → CHẾ ĐỘ THỬ NGHIỆM (lưu trên máy này)
 ============================================================ */
-const APP_VERSION = 'v7.1';
+const APP_VERSION = '7.1';  // so khớp với MIN_CLIENT_VERSION ở server
 const CONFIG = { API_URL: 'https://jm-lich-api-616645882793.asia-southeast1.run.app', TOKEN: 'JM2026' };
 
 const DAYS = ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
@@ -400,8 +400,9 @@ function analyze(assign, slots, settings){
       const hrs = Math.round(ivs.reduce((a,b)=>a+b.h,0)*100)/100;
       dayPersonHours[di][name] = hrs;
       weekTotal[name] = Math.round(((weekTotal[name]||0)+hrs)*100)/100;
-      if (hrs > settings.maxDay)
-        warnings.push({type:'day',di,name,msg:name+' làm '+hrs+'h trong '+DAYS[di]+' (vượt '+settings.maxDay+'h/ngày)'});
+      // Chỉ cảnh báo khi TỔNG nhiều ca trong ngày vượt ngưỡng — một ca đơn dài (VD ca QL 8.5h) là hợp lệ
+      if (ivs.length >= 2 && hrs > settings.maxDay)
+        warnings.push({type:'day',di,name,msg:name+' bị xếp '+ivs.length+' ca cộng '+hrs+'h trong '+DAYS[di]+' (vượt '+settings.maxDay+'h/ngày)'});
       const sorted = ivs.slice().sort((a,b)=>a.s-b.s);
       for (let i=1;i<sorted.length;i++) if (sorted[i].s < sorted[i-1].e)
         warnings.push({type:'overlap',di,name,msg:name+' trùng giờ '+DAYS[di]+': ca '+sorted[i-1].label+' và ca '+sorted[i].label+' (chồng '+fmtH(sorted[i].s)+'–'+fmtH(Math.min(sorted[i-1].e,sorted[i].e))+')'});
@@ -1445,16 +1446,36 @@ document.addEventListener('keydown', (e) => {
 });
 render();
 /* Nạp danh sách cửa hàng/khu vực thật cho màn đăng nhập */
+function verLt(a, b){ // a < b ?
+  const pa=String(a).split('.').map(Number), pb=String(b).split('.').map(Number);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=pa[i]||0, y=pb[i]||0; if(x<y) return true; if(x>y) return false;
+  }
+  return false;
+}
+let BLOCKED = false;
+function blockOldVersion(min){
+  BLOCKED = true;
+  document.getElementById('app').innerHTML =
+    '<div style="max-width:440px;margin:80px auto;text-align:center;font-family:system-ui">'
+    +'<h2 style="color:#b91c1c">Cần cập nhật phiên bản</h2>'
+    +'<p style="color:#57534e;line-height:1.6">Bạn đang mở bản cũ (v'+APP_VERSION+'), hệ thống yêu cầu v'+min+'.<br>'
+    +'Bản cũ có thể lưu lịch sai chỗ nên đã tạm khóa.</p>'
+    +'<button onclick="location.reload(true)" style="background:#1c1917;color:#fff;border:none;border-radius:10px;padding:12px 22px;font-size:15px;cursor:pointer;margin-top:8px">Tải lại bản mới</button>'
+    +'<p style="color:#a8a29e;font-size:12px;margin-top:16px">Nếu bấm nút trên không được: đóng hẳn tab/app rồi mở lại đường dẫn <b>reportjdd.uk/?v='+min.replace(/\./g,'')+'</b></p>'
+    +'</div>';
+}
 (async function initBoot(){
   if (state.demo) return;
   try{
     const r = await api('bootstrap');
+    if (r.minVersion && verLt(APP_VERSION, r.minVersion)){ blockOldVersion(r.minVersion); return; }
     state.stores = r.stores || {};
     state.regions = r.regions || {};
   }catch(e){
     state.saveMsg = 'err:Không tải được danh sách cửa hàng — kiểm tra mạng rồi bấm F5';
   }
-  if (!state.session) render();
+  if (!BLOCKED && !state.session) render();
 })();
 </script>
 </body>
