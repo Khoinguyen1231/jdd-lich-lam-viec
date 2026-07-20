@@ -415,13 +415,42 @@ function localApi(action, p){
     }
     case 'setLock': { if(!isAdmin) throw new Error('Chỉ quản trị.'); ensure(p.week,p.entity).locked=p.locked; localSave(db); return {ok:1}; }
     case 'lockAll': { if(!isAdmin) throw new Error('Chỉ quản trị.'); Object.keys(pl).forEach(c=>ensure(p.week,c).locked=p.locked); localSave(db); return {ok:1}; }
-    case 'setSettings': { if(!isAdmin) throw new Error('Chỉ quản trị.'); Object.assign(db.settings, p.patch); localSave(db); return {ok:1}; }
+    case 'setSettings': {
+      if(!isAdmin) throw new Error('Chỉ quản trị.');
+      const patch = p.patch||{};
+      if (patch.alerts){ db.settings.alerts = Object.assign({}, db.settings.alerts||{}, patch.alerts); delete patch.alerts; }
+      Object.assign(db.settings, patch);
+      localSave(db); return {ok:1};
+    }
   }
   throw new Error('Hành động không hợp lệ');
 }
 
 /* ---------------- Phân tích ---------------- */
-function analyze(assign, slots, settings){
+/* Cấu hình cảnh báo mặc định — admin bật/tắt và chỉnh tham số trong tab Quản trị */
+const ALERT_DEFAULTS = {
+  overlap:      {on:true,  grace:60},   // trùng giờ, cho chồng tối đa 'grace' phút (giao ca)
+  day:          {on:true},              // vượt giờ/ngày (dùng settings.maxDay)
+  week:         {on:true},              // vượt giờ/tuần (dùng settings.maxWeek)
+  norest:       {on:true},              // làm đủ 7 ngày, không nghỉ
+  restgap:      {on:true},              // làm nhiều ngày chưa xếp Off
+  offconflict:  {on:true},              // Off nhưng vẫn có ca
+  probation:    {on:true,  days:7},     // thử việc sắp hết hạn trong 'days' ngày
+  gap:          {on:true},              // giờ trống không ai trực
+  emptyslot:    {on:false},             // ca mở nhưng cả tuần không ai (mặc định TẮT — dễ nhiễu)
+  nomgrday:     {on:false},             // ngày không có quản lý trực
+  unassigned:   {on:false},             // nhân viên cả tuần không ca nào
+  regionmulti:  {on:true,  max:2},      // QLV đi quá 'max' store/ngày
+};
+function alertCfg(settings){
+  const c = (settings && settings.alerts) || {};
+  const out = {};
+  Object.keys(ALERT_DEFAULTS).forEach(k=>{ out[k] = Object.assign({}, ALERT_DEFAULTS[k], c[k]||{}); });
+  return out;
+}
+function analyze(assign, slots, settings, ctx){
+  const A = alertCfg(settings);
+  ctx = ctx || {};
   const byDay = {};
   slots.forEach(slot => {
     const bySlot = (assign && assign[slot.id]) || {};
@@ -429,11 +458,12 @@ function analyze(assign, slots, settings){
       (bySlot[di]||[]).forEach(raw => {
         const name = (raw && typeof raw==='object') ? raw.n : raw;
         byDay[di] = byDay[di] || {}; byDay[di][name] = byDay[di][name] || [];
-        byDay[di][name].push({label:slot.label, s:toDec(slot.start), e:toDec(slot.end), h:slotHours(slot)});
+        byDay[di][name].push({label:slot.label, s:toDec(slot.start), e:toDec(slot.end), h:slotHours(slot), sid:slot.id, hint:(raw&&typeof raw==='object')?raw.h:''});
       });
     });
   });
   const warnings=[], weekTotal={}, dayPersonHours={}, coverage=[];
+  const grace = (A.overlap.grace||0)/60;  // phút -> giờ
   for (let di=0; di<7; di++){
     const people = byDay[di] || {}; dayPersonHours[di] = {};
     Object.keys(people).forEach(name => {
@@ -441,12 +471,22 @@ function analyze(assign, slots, settings){
       const hrs = Math.round(ivs.reduce((a,b)=>a+b.h,0)*100)/100;
       dayPersonHours[di][name] = hrs;
       weekTotal[name] = Math.round(((weekTotal[name]||0)+hrs)*100)/100;
-      // Chỉ cảnh báo khi TỔNG nhiều ca trong ngày vượt ngưỡng — một ca đơn dài (VD ca QL 8.5h) là hợp lệ
-      if (ivs.length >= 2 && hrs > settings.maxDay)
+      if (A.day.on && ivs.length >= 2 && hrs > settings.maxDay)
         warnings.push({type:'day',di,name,msg:name+' bị xếp '+ivs.length+' ca cộng '+hrs+'h trong '+DAYS[di]+' (vượt '+settings.maxDay+'h/ngày)'});
+      // Trùng giờ: chỉ báo khi phần chồng VƯỢT quá thời gian giao ca cho phép
       const sorted = ivs.slice().sort((a,b)=>a.s-b.s);
-      for (let i=1;i<sorted.length;i++) if (sorted[i].s < sorted[i-1].e)
-        warnings.push({type:'overlap',di,name,msg:name+' trùng giờ '+DAYS[di]+': ca '+sorted[i-1].label+' và ca '+sorted[i].label+' (chồng '+fmtH(sorted[i].s)+'–'+fmtH(Math.min(sorted[i-1].e,sorted[i].e))+')'});
+      for (let i=1;i<sorted.length;i++){
+        const overlapH = Math.min(sorted[i-1].e, sorted[i].e) - sorted[i].s;
+        if (A.overlap.on && overlapH > grace + 1e-9)
+          warnings.push({type:'overlap',di,name,msg:name+' trùng giờ '+DAYS[di]+': ca '+sorted[i-1].label+' và ca '+sorted[i].label+' (chồng '+Math.round(overlapH*60)+' phút)'});
+      }
+      // QLV đi quá nhiều store/ngày
+      if (A.regionmulti.on && ctx.scope==='region'){
+        const stores = ivs.map(iv=>iv.hint).filter(h=>h && h!=='__VP__');
+        const uniq = [...new Set(stores)];
+        if (uniq.length > (A.regionmulti.max||2))
+          warnings.push({type:'regionmulti',di,name,msg:name+' đi '+uniq.length+' cửa hàng trong '+DAYS[di]+' ('+uniq.join(', ')+') — quá '+A.regionmulti.max+' store/ngày'});
+      }
     });
     const row=[];
     for (let h=OPEN_H; h<CLOSE_H; h++){
@@ -454,41 +494,84 @@ function analyze(assign, slots, settings){
       row.push(c);
     }
     coverage.push(row);
-    let gap=null;
-    for (let h=OPEN_H; h<=CLOSE_H; h++){
-      const empty = h<CLOSE_H && row[h-OPEN_H]===0;
-      if (empty && gap===null) gap=h;
-      if (!empty && gap!==null){ warnings.push({type:'gap',di,msg:DAYS[di]+': không ai trực từ '+fmtH(gap)+' đến '+fmtH(h)}); gap=null; }
+    if (A.gap.on){
+      let gap=null;
+      for (let h=OPEN_H; h<=CLOSE_H; h++){
+        const empty = h<CLOSE_H && row[h-OPEN_H]===0;
+        if (empty && gap===null) gap=h;
+        if (!empty && gap!==null){ warnings.push({type:'gap',di,msg:DAYS[di]+': không ai trực từ '+fmtH(gap)+' đến '+fmtH(h)}); gap=null; }
+      }
+    }
+    // Ngày không có quản lý trực
+    if (A.nomgrday.on && ctx.scope!=='region'){
+      const hasMgr = Object.keys(people).some(n => people[n].some(iv=>{
+        const sl = slots.find(s=>s.id===iv.sid); return sl && sl.role===MGR;
+      }) || n===MGR);
+      const anyone = Object.keys(people).length>0;
+      if (anyone && !hasMgr)
+        warnings.push({type:'nomgrday',di,msg:DAYS[di]+': có ca bán hàng nhưng không ai trực Quản lý'});
     }
   }
-  Object.keys(weekTotal).forEach(name=>{ if (weekTotal[name] > settings.maxWeek)
+  if (A.week.on) Object.keys(weekTotal).forEach(name=>{ if (weekTotal[name] > settings.maxWeek)
     warnings.push({type:'week',name,msg:name+' làm '+weekTotal[name]+'h/tuần (vượt '+settings.maxWeek+'h/tuần)'}); });
 
-  /* ---- Off tuần: 0 giờ, kiểm tra mâu thuẫn và ngày nghỉ ---- */
+  /* ---- Off tuần ---- */
   const offByDay = {};
   const offAssign = (assign && assign.OFF) || {};
   Object.keys(offAssign).forEach(di => {
     offByDay[di] = (offAssign[di]||[]).map(x => (x && typeof x==='object') ? x.n : x);
   });
-  for (let di=0; di<7; di++){
+  if (A.offconflict.on) for (let di=0; di<7; di++){
     (offByDay[di]||[]).forEach(name => {
       if ((dayPersonHours[di]||{})[name])
         warnings.push({type:'offconflict', di, name,
           msg:name+' vừa Off vừa có ca làm trong '+DAYS[di]+' — chọn một trong hai'});
     });
   }
-  // Người làm >= 6 ngày mà chưa có ngày Off nào -> nhắc; đủ 7 ngày -> cảnh báo mạnh
   const offDays = {};
   Object.values(offByDay).forEach(list => list.forEach(n => { offDays[n]=(offDays[n]||0)+1; }));
   const workedDays = {};
   for (let di=0; di<7; di++)
     Object.keys(dayPersonHours[di]||{}).forEach(n => { workedDays[n]=(workedDays[n]||0)+1; });
   Object.keys(workedDays).forEach(n => {
-    if (workedDays[n] >= 7)
+    if (A.norest.on && workedDays[n] >= 7)
       warnings.push({type:'norest', name:n, msg:n+' làm đủ 7 ngày/tuần, không có ngày nghỉ — vi phạm tối thiểu 1 ngày nghỉ/tuần'});
-    else if (workedDays[n] >= 6 && !offDays[n])
-      warnings.push({type:'gap', name:n, msg:n+' làm '+workedDays[n]+' ngày nhưng chưa xếp ngày Off tuần'});
+    else if (A.restgap.on && workedDays[n] >= 6 && !offDays[n])
+      warnings.push({type:'restgap', name:n, msg:n+' làm '+workedDays[n]+' ngày nhưng chưa xếp ngày Off tuần'});
   });
+
+  /* ---- Cảnh báo dựa trên roster (cần ctx.roster) ---- */
+  const roster = ctx.roster || [];
+  // Nhân viên cả tuần không được xếp ca nào
+  if (A.unassigned.on && roster.length){
+    roster.forEach(r => {
+      if (!workedDays[r.name] && !offDays[r.name])
+        warnings.push({type:'unassigned', name:r.name, msg:r.name+' không được xếp ca nào trong tuần'});
+    });
+  }
+  // Thử việc sắp hết hạn
+  if (A.probation.on && roster.length && ctx.weekStart){
+    const base = parseYMD(ctx.weekStart);
+    roster.forEach(r => {
+      if (r.status==='TV' && r.end){
+        const end = parseYMD(r.end);
+        const days = Math.round((end - base)/86400000);
+        if (days < 0)
+          warnings.push({type:'probation', name:r.name, msg:r.name+' đã QUÁ hạn thử việc ('+r.end+') — cần chốt chính thức hoặc dừng'});
+        else if (days <= (A.probation.days||7))
+          warnings.push({type:'probation', name:r.name, msg:r.name+' hết hạn thử việc trong '+days+' ngày ('+r.end+')'});
+      }
+    });
+  }
+  // Ca mở nhưng cả tuần không ai được xếp
+  if (A.emptyslot.on){
+    slots.forEach(slot => {
+      const bySlot = (assign && assign[slot.id]) || {};
+      const anyone = Object.keys(bySlot).some(di => (bySlot[di]||[]).length>0);
+      if (!anyone)
+        warnings.push({type:'emptyslot', msg:'Ca "'+slot.label+'" ('+slot.role+') cả tuần không có ai được xếp'});
+    });
+  }
   return {warnings, weekTotal, dayPersonHours, coverage, offByDay};
 }
 function probationNotices(code){
@@ -939,8 +1022,8 @@ function render(){
   const codes = Object.keys(pool());
   const sw = entData();
   const slots = curSlots();
-  const a = analyze(sw.assign, slots, state.settings);
-  const allA = {}; codes.forEach(c => allA[c] = analyze(((state.weekData[state.scope]||{})[c]||{}).assign||{}, slots, state.settings));
+  const a = analyze(sw.assign, slots, state.settings, {scope:state.scope, roster:rosterOf(activeEntity()), weekStart:state.week});
+  const allA = {}; codes.forEach(c => allA[c] = analyze(((state.weekData[state.scope]||{})[c]||{}).assign||{}, slots, state.settings, {scope:state.scope, roster:rosterOf(c), weekStart:state.week}));
   const locked = !!sw.locked;
   const canEdit = state.session.role==='admin' || !locked;
   const probCount = probationNotices(activeEntity()).length;
@@ -1440,7 +1523,7 @@ function viewControl(codes, allA){
   return `<p class="sm mut" style="margin-bottom:12px">Ngưỡng: tối đa ${state.settings.maxDay}h/người/ngày · ${state.settings.maxWeek}h/người/tuần · phát hiện trùng ca, khung giờ trống ${fmtH(OPEN_H)}–${fmtH(CLOSE_H)} và hạn thử việc.</p>`
   + list.map(c=>{
     const a=allA[c], locked=((state.weekData[state.scope]||{})[c]||{}).locked;
-    const warns = a.warnings.concat(probationNotices(c));
+    const warns = a.warnings;  // analyze đã bao gồm cảnh báo thử việc (type probation)
     return `<div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
         <b>${esc(c)}</b><span class="mut xs">${esc(pool()[c].name!==c?pool()[c].name:'')}</span>
@@ -1506,6 +1589,7 @@ function viewAdmin(codes){
     </div>
     <p class="xs mut" style="margin-top:10px">PIN cửa hàng và khu vực sửa ở tab <b>Cửa hàng</b>. Ca làm việc sửa ở tab <b>Ca làm</b>.</p>
   </div>
+  ${viewAlertConfig()}
   <div class="card">
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px">
       <h3 style="margin:0">Khóa lịch ${weekLabel(state.week)} · ${state.scope==='region'?'khu vực':'cửa hàng'}</h3>
@@ -1518,6 +1602,52 @@ function viewAdmin(codes){
     }).join('')}
   </div>`;
 }
+
+/* Danh mục cảnh báo để hiển thị công tắc */
+const ALERT_META = [
+  {k:'overlap',     name:'Trùng giờ (2 ca chồng nhau)',        param:'grace', unit:'phút giao ca cho phép'},
+  {k:'day',         name:'Vượt giờ/ngày',                       param:null},
+  {k:'week',        name:'Vượt giờ/tuần',                       param:null},
+  {k:'norest',      name:'Làm đủ 7 ngày, không ngày nghỉ',      param:null},
+  {k:'restgap',     name:'Làm nhiều ngày chưa xếp Off',         param:null},
+  {k:'offconflict', name:'Off nhưng vẫn có ca cùng ngày',       param:null},
+  {k:'probation',   name:'Thử việc sắp hết hạn',                param:'days', unit:'ngày báo trước'},
+  {k:'gap',         name:'Giờ trống không ai trực',             param:null},
+  {k:'regionmulti', name:'QLV đi quá nhiều store/ngày',         param:'max',  unit:'store tối đa/ngày'},
+  {k:'emptyslot',   name:'Ca mở nhưng cả tuần không ai',        param:null},
+  {k:'nomgrday',    name:'Ngày không có Quản lý trực',          param:null},
+  {k:'unassigned',  name:'Nhân viên cả tuần không được xếp ca', param:null},
+];
+function viewAlertConfig(){
+  const cfg = alertCfg(state.settings);
+  return `<div class="card" style="margin-bottom:16px">
+    <h3>Cấu hình cảnh báo <span class="mut xs" style="font-weight:400">· áp dụng cho toàn hệ thống</span></h3>
+    <p class="xs mut" style="margin:4px 0 12px">Bật/tắt từng loại cảnh báo cho mọi cửa hàng. Tắt loại nào thì không cửa hàng nào còn thấy loại đó.</p>
+    <div style="overflow-x:auto"><table class="report-table" style="min-width:560px">
+      <tr><th>Loại cảnh báo</th><th style="text-align:center">Bật</th><th>Tham số</th></tr>
+      ${ALERT_META.map(m=>{
+        const c = cfg[m.k];
+        return `<tr>
+          <td>${m.name}</td>
+          <td style="text-align:center"><input type="checkbox" class="al-on" data-k="${m.k}" ${c.on?'checked':''} style="width:18px;height:18px;cursor:pointer"></td>
+          <td>${m.param ? `<input class="al-param" data-k="${m.k}" data-p="${m.param}" value="${c[m.param]}" style="width:60px"> <span class="xs mut">${m.unit}</span>` : '<span class="xs mut">—</span>'}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>
+    <button class="btn btn-dark btn-sm" style="margin-top:12px" onclick="doSaveAlerts()">Lưu cấu hình cảnh báo</button>
+  </div>`;
+}
+window.doSaveAlerts = () => {
+  const alerts = {};
+  document.querySelectorAll('.al-on').forEach(el=>{
+    const k = el.dataset.k; alerts[k] = alerts[k]||{}; alerts[k].on = el.checked;
+  });
+  document.querySelectorAll('.al-param').forEach(el=>{
+    const k = el.dataset.k, p = el.dataset.p; alerts[k] = alerts[k]||{};
+    const v = Number(el.value); if (!isNaN(v)) alerts[k][p] = v;
+  });
+  mutate('setSettings', {patch:{alerts}}, 'Đã lưu cấu hình cảnh báo');
+};
 
 document.addEventListener('click', (e) => {
   if (state.calOpen && !e.target.closest('.weeknav')) { state.calOpen=false; render(); }
