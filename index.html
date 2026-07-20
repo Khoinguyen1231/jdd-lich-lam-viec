@@ -1315,9 +1315,12 @@ function viewGroupModal(){
 }
 function viewSlotModal(){
   const s = state.editSlot, isNew = !s.id;
-  const scopeLabel = {store_tp:'Cửa hàng TP', store_tinh:'Cửa hàng Tỉnh', region:'Quản lý vùng'}[state.slotTab];
+  const scopeLabel = slotScopeLabel(state.slotTab);  // dùng chung, đúng cho cả nhóm tự tạo (Aeon...)
+  const isRegion = state.slotTab==='region';
+  const roles = isRegion ? ['Quản lý vùng'] : ['Bán hàng','Quản lý','Kho'];
+  const curRole = s.role || (isRegion ? 'Quản lý vùng' : 'Bán hàng');
   return `<div class="modal-bg" onclick="closeSlot()"><div class="modal" onclick="event.stopPropagation()">
-    <h3>${isNew?'Thêm ca mới':'Sửa ca'} · ${scopeLabel}</h3>
+    <h3>${isNew?'Thêm ca mới':'Sửa ca'} · ${esc(scopeLabel)}</h3>
     <label class="fld" style="margin-bottom:10px">Tên ca (hiện trên lịch)
       <input id="sl-label" class="field" value="${esc(s.label)}" placeholder="VD: 9h – 13h"></label>
     <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -1325,8 +1328,9 @@ function viewSlotModal(){
       <label class="fld" style="flex:1">Giờ kết thúc<input id="sl-end" type="time" class="field" value="${s.end}"></label>
     </div>
     <label class="fld" style="margin-bottom:14px">Chức vụ (nhóm các ca cùng loại)
-      <input id="sl-role" class="field" value="${esc(s.role)}" placeholder="VD: Bán hàng / Quản lý" list="rolelist">
-      <datalist id="rolelist"><option>Bán hàng</option><option>Quản lý</option><option>Quản lý vùng</option><option>Kho</option></datalist>
+      <select id="sl-role" class="field">
+        ${roles.map(r=>`<option value="${r}" ${r===curRole?'selected':''}>${r}</option>`).join('')}
+      </select>
     </label>
     <div style="display:flex;gap:8px">
       <button class="btn btn-dark" style="flex:1" onclick="saveSlotForm()">Lưu ca</button>
